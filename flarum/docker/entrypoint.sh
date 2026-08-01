@@ -127,7 +127,7 @@ install_or_migrate() {
     echo "Installing Flarum..."
     install_file="$(mktemp /tmp/flarum-install.XXXXXX)"
     write_install_file "${install_file}"
-    php flarum install --file="${install_file}"
+    php /usr/local/bin/install-flarum.php "${install_file}"
     rm -f "${install_file}"
     echo "Flarum installation complete."
   else

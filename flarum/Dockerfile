@@ -105,9 +105,10 @@ COPY flarum/docker/php.ini /usr/local/etc/php/conf.d/zz-flarum.ini
 COPY flarum/docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-flarum.conf
 COPY flarum/docker/nginx.conf /etc/nginx/nginx.conf
 COPY flarum/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY flarum/docker/install-flarum.php /usr/local/bin/install-flarum.php
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
-RUN chmod 0555 /usr/local/bin/entrypoint.sh /usr/local/bin/flarum-backup \
+RUN chmod 0555 /usr/local/bin/entrypoint.sh /usr/local/bin/install-flarum.php /usr/local/bin/flarum-backup \
     && chown -R flarum:flarum /etc/nginx /usr/local/etc/php /usr/local/etc/php-fpm.d
 
 USER flarum:flarum
