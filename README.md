@@ -10,7 +10,9 @@ Compose file: `flarum/docker-compose.yml`
 
 Coolify compose file: `flarum/docker-compose.coolify.yml`
 
-Assign domain `https://your-forum.example.com:8080` to the `flarum` service in Coolify. Port 8080 is the container port for the proxy.
+Assign domain `https://your-forum.example.com:8080` to the `flarum` service in Coolify. Port 8080 is the container port for the proxy. The entrypoint strips `:8080` from `FLARUM_BASE_URL` so assets use the public URL without the container port.
+
+You can override the public URL with `FLARUM_BASE_URL=https://your-forum.example.com` if needed.
 
 Image: `ghcr.io/sudo-ivan/hardened-stacks/flarum`
 

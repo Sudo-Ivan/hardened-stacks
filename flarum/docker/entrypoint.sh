@@ -11,7 +11,23 @@ DB_USERNAME="${DB_USERNAME:-flarum}"
 DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD is required}"
 DB_PREFIX="${DB_PREFIX:-flarum_}"
 
-FLARUM_BASE_URL="${FLARUM_BASE_URL:?FLARUM_BASE_URL is required}"
+normalize_base_url() {
+  url="${1%/}"
+  case "$url" in
+    *:8080)
+      url="${url%:8080}"
+      ;;
+    https://*:443)
+      url="${url%:443}"
+      ;;
+    http://*:80)
+      url="${url%:80}"
+      ;;
+  esac
+  printf '%s' "$url"
+}
+
+FLARUM_BASE_URL="$(normalize_base_url "${FLARUM_BASE_URL:?FLARUM_BASE_URL is required}")"
 FLARUM_FORUM_TITLE="${FLARUM_FORUM_TITLE:?FLARUM_FORUM_TITLE is required}"
 FLARUM_ADMIN_USERNAME="${FLARUM_ADMIN_USERNAME:-admin}"
 FLARUM_ADMIN_PASSWORD="${FLARUM_ADMIN_PASSWORD:?FLARUM_ADMIN_PASSWORD is required}"
