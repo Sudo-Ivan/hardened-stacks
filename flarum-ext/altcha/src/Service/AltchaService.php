@@ -70,11 +70,6 @@ class AltchaService
         return $result->verified && ! $result->expired;
     }
 
-    public function syncConfiguredFlag(): void
-    {
-        $this->settings->set('hardened-stacks-altcha.configured', $this->isConfigured() ? '1' : '0');
-    }
-
     private function cost(): int
     {
         $cost = (int) $this->settings->get('hardened-stacks-altcha.cost', 5000);

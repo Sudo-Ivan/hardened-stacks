@@ -30,7 +30,7 @@ class BlockLockedUserFromPosting
 
     private function assertCanPost($actor): void
     {
-        if ($actor->isGuest() || $actor->isAdmin()) {
+        if (! $actor || $actor->isGuest() || $actor->isAdmin()) {
             return;
         }
 

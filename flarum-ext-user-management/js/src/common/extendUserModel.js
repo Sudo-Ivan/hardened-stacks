@@ -1,4 +1,3 @@
-import app from 'flarum/forum/app';
 import User from 'flarum/common/models/User';
 
 Object.assign(User.prototype, {

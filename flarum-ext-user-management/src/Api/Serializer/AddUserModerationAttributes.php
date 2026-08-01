@@ -15,23 +15,31 @@ class AddUserModerationAttributes
 
     public function __invoke(UserSerializer $serializer, User $user, array $attributes): array
     {
+        $attributes['canPmgModerate'] = false;
+        $attributes['canPmgPurgeContent'] = false;
+        $attributes['canPmgDeleteUser'] = false;
+
         $actor = $serializer->getActor();
 
-        if ($actor->id === $user->id || $actor->can('pmg.moderateUsers')) {
+        if ($actor->isGuest()) {
+            return $attributes;
+        }
+
+        $actorId = (int) $actor->id;
+        $userId = (int) $user->id;
+        $canModerate = $actor->hasPermission('pmg.moderateUsers');
+
+        if ($actorId === $userId || $canModerate) {
             $attributes['pmgPostingLocked'] = $this->moderator->isPostingLocked($user);
             $attributes['pmgPostingLockMessage'] = $this->moderator->postingLockMessage($user);
             $attributes['pmgSuspended'] = $this->moderator->isSuspended($user);
             $attributes['pmgSuspendedUntil'] = $user->getPreference('pmgSuspendedUntil');
         }
 
-        if ($actor->can('pmg.moderateUsers') && $actor->id !== $user->id && ! $user->isAdmin()) {
+        if ($canModerate && $actorId !== $userId && ! $user->isAdmin()) {
             $attributes['canPmgModerate'] = true;
             $attributes['canPmgPurgeContent'] = $actor->hasPermission('pmg.purgeContent');
             $attributes['canPmgDeleteUser'] = $actor->hasPermission('pmg.deleteUsers');
-        } else {
-            $attributes['canPmgModerate'] = false;
-            $attributes['canPmgPurgeContent'] = false;
-            $attributes['canPmgDeleteUser'] = false;
         }
 
         return $attributes;

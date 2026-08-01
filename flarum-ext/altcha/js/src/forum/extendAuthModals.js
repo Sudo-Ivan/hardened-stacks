@@ -10,8 +10,12 @@ function isConfigured() {
   return !!app.forum.attribute('hardened-stacks-altcha.configured');
 }
 
+function isMasterEnabled() {
+  return !!app.forum.attribute('hardened-stacks-altcha.enabled');
+}
+
 function isEnabled(key) {
-  return isConfigured() && !!app.forum.attribute(`hardened-stacks-altcha.${key}`);
+  return isConfigured() && isMasterEnabled() && !!app.forum.attribute(`hardened-stacks-altcha.${key}`);
 }
 
 function applyToModal(modal, enabledKey, dataMethod) {

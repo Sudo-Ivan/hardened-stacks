@@ -13,7 +13,7 @@ export default class AltchaState {
       const apiUrl = app.forum.attribute('apiUrl');
 
       widget.setAttribute('challengeurl', `${apiUrl}/altcha/challenge`);
-      widget.setAttribute('display', 'invisible');
+      widget.setAttribute('display', 'floating');
       widget.setAttribute('name', 'altcha');
 
       widget.addEventListener('verified', (event) => {

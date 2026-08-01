@@ -2,7 +2,7 @@ hardened-stacks-altcha:
   admin:
     settings:
       enabled_label: Enable ALTCHA
-      enabled_help: Requires ALTCHA_HMAC_SECRET in the environment or the secret field below.
+      enabled_help: Requires ALTCHA_HMAC_SECRET in the environment or the HMAC secret field below. Without a secret, the widget will not appear on signup.
       hmac_secret_label: HMAC secret (optional)
       hmac_secret_help: Leave empty to use ALTCHA_HMAC_SECRET from the environment.
       cost_label: Proof-of-work cost
@@ -13,6 +13,8 @@ hardened-stacks-altcha:
       protect_discussion_label: Protect new discussions
       protect_reply_label: Protect replies
   forum:
+    verifying: Running security check...
+    challenge_error: Security check failed. Please try again.
     challenge_not_ready: Security check is still running. Please wait a moment and try again.
   validation:
     failed: Security verification failed. Please try again.

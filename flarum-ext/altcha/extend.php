@@ -4,8 +4,8 @@ use Flarum\Extend;
 use Flarum\User\ForgotPasswordValidator;
 use Flarum\User\LogInValidator;
 use HardenedStacks\Altcha\Api\Controller\ChallengeController;
+use HardenedStacks\Altcha\Listener\AddAltchaForumAttributes;
 use HardenedStacks\Altcha\Listener\AddAltchaValidatorRule;
-use HardenedStacks\Altcha\Listener\SyncConfiguredSetting;
 use HardenedStacks\Altcha\Listener\ValidatePostAltcha;
 use HardenedStacks\Altcha\Listener\ValidateRegistrationAltcha;
 
@@ -29,12 +29,14 @@ return [
         ->default('hardened-stacks-altcha.protect_password_reset', '1')
         ->default('hardened-stacks-altcha.protect_discussion', '0')
         ->default('hardened-stacks-altcha.protect_reply', '0')
-        ->serializeToForum('hardened-stacks-altcha.configured', 'hardened-stacks-altcha.configured', 'boolval')
         ->serializeToForum('hardened-stacks-altcha.protectRegistration', 'hardened-stacks-altcha.protect_registration', 'boolval')
         ->serializeToForum('hardened-stacks-altcha.protectLogin', 'hardened-stacks-altcha.protect_login', 'boolval')
         ->serializeToForum('hardened-stacks-altcha.protectForgot', 'hardened-stacks-altcha.protect_password_reset', 'boolval')
         ->serializeToForum('hardened-stacks-altcha.protectDiscussion', 'hardened-stacks-altcha.protect_discussion', 'boolval')
         ->serializeToForum('hardened-stacks-altcha.protectReply', 'hardened-stacks-altcha.protect_reply', 'boolval'),
+
+    (new Extend\ApiSerializer(\Flarum\Api\Serializer\ForumSerializer::class))
+        ->attributes(AddAltchaForumAttributes::class),
 
     (new Extend\Validator(LogInValidator::class))
         ->configure(AddAltchaValidatorRule::class),
@@ -43,7 +45,6 @@ return [
         ->configure(AddAltchaValidatorRule::class),
 
     (new Extend\Event())
-        ->listen(\Flarum\Foundation\Event\ApplicationBooted::class, SyncConfiguredSetting::class)
         ->listen(\Flarum\User\Event\Saving::class, ValidateRegistrationAltcha::class)
         ->listen(\Flarum\Post\Event\Saving::class, ValidatePostAltcha::class),
 ];
