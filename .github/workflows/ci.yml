@@ -74,6 +74,22 @@ jobs:
       - name: Smoke backup CLI
         run: docker run --rm --entrypoint flarum-backup ghcr.io/sudo-ivan/hardened-stacks/flarum:ci version
 
+      - name: Smoke forum health endpoint
+        working-directory: flarum
+        env:
+          FLARUM_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/flarum:ci
+        run: |
+          docker compose up -d --no-build
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 60); do
+            if docker compose exec -T flarum curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs flarum
+          exit 1
+
   otterwiki-build:
     name: otterwiki image build
     runs-on: ubuntu-latest

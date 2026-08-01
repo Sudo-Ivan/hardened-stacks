@@ -2,7 +2,20 @@
 
 ARG PHP_VERSION=8.4
 ARG GO_IMAGE=golang:1.26.5-alpine@sha256:0178a641fbb4858c5f1b48e34bdaabe0350a330a1b1149aabd498d0699ff5fb2
+ARG NODE_IMAGE=node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
 ARG PHP_IMAGE=php:8.4-fpm-alpine@sha256:38aca005bd69e4046f8fbf8aa4f700bf5e1474d36edb85953da2b5fe848ed3b4
+
+FROM ${NODE_IMAGE} AS extension-js
+
+WORKDIR /build
+
+COPY flarum-ext/altcha/js ./altcha
+COPY flarum-ext-user-management/js ./user-management
+COPY flarum-ext/spam-protection/js ./spam-protection
+
+RUN cd altcha && npm ci && npm run build \
+    && cd ../user-management && npm ci && npm run build \
+    && cd ../spam-protection && npm ci && npm run build
 
 FROM ${GO_IMAGE} AS backup-cli
 
@@ -109,6 +122,9 @@ COPY flarum/docker/install-flarum.php /usr/local/bin/install-flarum.php
 COPY flarum-ext/spam-protection ${FLARUM_HOME}/packages/spam-protection
 COPY flarum-ext-user-management ${FLARUM_HOME}/packages/user-management
 COPY flarum-ext/altcha ${FLARUM_HOME}/packages/altcha
+COPY --from=extension-js /build/altcha/dist ${FLARUM_HOME}/packages/altcha/js/dist
+COPY --from=extension-js /build/user-management/dist ${FLARUM_HOME}/packages/user-management/js/dist
+COPY --from=extension-js /build/spam-protection/dist ${FLARUM_HOME}/packages/spam-protection/js/dist
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \

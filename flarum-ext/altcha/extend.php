@@ -43,7 +43,7 @@ return [
         ->configure(AddAltchaValidatorRule::class),
 
     (new Extend\Event())
-        ->listen(\Flarum\Foundation\Event\Booting::class, SyncConfiguredSetting::class)
+        ->listen(\Flarum\Foundation\Event\ApplicationBooted::class, SyncConfiguredSetting::class)
         ->listen(\Flarum\User\Event\Saving::class, ValidateRegistrationAltcha::class)
         ->listen(\Flarum\Post\Event\Saving::class, ValidatePostAltcha::class),
 ];

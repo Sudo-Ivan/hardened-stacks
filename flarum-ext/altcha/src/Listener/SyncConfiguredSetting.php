@@ -2,7 +2,7 @@
 
 namespace HardenedStacks\Altcha\Listener;
 
-use Flarum\Foundation\Event\Booting;
+use Flarum\Foundation\Event\ApplicationBooted;
 use HardenedStacks\Altcha\Service\AltchaService;
 
 class SyncConfiguredSetting
@@ -12,7 +12,7 @@ class SyncConfiguredSetting
     ) {
     }
 
-    public function handle(Booting $event): void
+    public function handle(ApplicationBooted $event): void
     {
         $this->altcha->syncConfiguredFlag();
     }
