@@ -1,12 +1,50 @@
 hardened-stacks-spam-protection:
+  admin:
+    settings:
+      new_user_post_delay_enabled_label: New account posting delay
+      new_user_post_delay_enabled_help: When enabled, new members must wait after registering before they can post or start discussions.
+      new_user_post_delay_label: New account wait time (seconds)
+      new_user_post_delay_help: How long after registration before a new member can post. 3600 is one hour. Only applies when the delay above is enabled.
+      min_post_interval_label: Minimum seconds between posts
+      min_post_interval_help: Light throttle for all members. Set to 0 to disable.
+      new_user_min_post_interval_label: New member post cooldown (seconds)
+      new_user_min_post_interval_help: Stricter cooldown while an account is still considered new.
+      burst_posts_hour_label: New member posts per hour
+      burst_posts_hour_help: Limits rapid-fire posting from new accounts. Set to 0 to disable.
+      duplicate_window_label: Duplicate post window (seconds)
+      duplicate_window_help: Blocks posting the same content again within this window. Set to 0 to disable.
+      new_user_days_label: New member period (days)
+      new_user_days_help: Accounts younger than this get the stricter checks. Set to 0 to ignore account age.
+      new_user_post_count_label: New member post count
+      new_user_post_count_help: Members with fewer posts than this get the stricter checks. Set to 0 to ignore post count.
+      min_links_for_context_check_label: Links before context check
+      min_links_for_context_check_help: New members must include real text once a post has at least this many links. Set to 0 to disable.
+      min_non_link_chars_label: Minimum non-link text (new members)
+      min_non_link_chars_help: Required amount of text that is not a URL when the context check applies.
+      max_links_label: Hard link cap (optional)
+      max_links_help: Disabled by default. Preservation posts can include many links. Set above 0 only if you need a hard ceiling for everyone.
+      new_user_max_links_label: Hard link cap for new members (optional)
+      new_user_max_links_help: Disabled by default. Set above 0 only for extreme cases.
+      max_url_ratio_label: URL ratio cap for new members (optional)
+      max_url_ratio_help: Disabled by default. Only applies to longer posts from new members. Set to 0 to disable.
+      url_ratio_min_length_label: URL ratio minimum post length
+      url_ratio_min_length_help: Only used when URL ratio cap is enabled.
   forum:
     post:
+      new_user_post_delay: New accounts must wait a little longer before posting. Please try again later.
       rate_limited: Please wait a little before posting again.
+      burst_limited: You are posting too quickly. Please slow down and try again later.
+      duplicate_content: You already posted this content recently.
+      link_only_post: Please add a short description with your links so others know what you are sharing.
       too_many_links: This post has too many links.
-      too_many_links_new_user: New members can only include a few links per post.
-      too_link_heavy: This post looks too link-heavy.
+      too_many_links_new_user: This post has too many links for a new member account.
+      too_link_heavy: This post is almost entirely links with very little explanation.
     discussion:
+      new_user_post_delay: New accounts must wait a little longer before starting a discussion. Please try again later.
       rate_limited: Please wait a little before starting another discussion.
+      burst_limited: You are posting too quickly. Please slow down and try again later.
+      duplicate_content: You already posted this content recently.
+      link_only_post: Please add a short description with your links so others know what you are sharing.
       too_many_links: This title has too many links.
-      too_many_links_new_user: New members can only include a few links in discussion titles.
-      too_link_heavy: This title looks too link-heavy.
+      too_many_links_new_user: This title has too many links for a new member account.
+      too_link_heavy: This title is almost entirely links with very little explanation.

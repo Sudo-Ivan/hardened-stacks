@@ -19,6 +19,6 @@ class RecordPostActivity
             return;
         }
 
-        $this->checker->markPosted($event->actor);
+        $this->checker->markPosted($event->actor, $event->post->content);
     }
 }

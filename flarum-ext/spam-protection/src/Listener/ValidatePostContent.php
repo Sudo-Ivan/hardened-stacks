@@ -25,11 +25,14 @@ class ValidatePostContent
             return;
         }
 
+        $isNew = ! $event->post->exists;
+
         $this->checker->assertContentAllowed(
             $event->actor,
             (string) $content,
             'hardened-stacks-spam-protection.forum.post',
-            ! $event->post->exists
+            $isNew,
+            $isNew
         );
     }
 }

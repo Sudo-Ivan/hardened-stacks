@@ -23,7 +23,7 @@ Forum software. Built from source as a rootless image.
 
 **First deploy:** set FLARUM_FORUM_TITLE and FLARUM_ADMIN_EMAIL.
 
-**Spam protection:** the hardened-stacks-spam-protection extension is bundled. It limits links, posting speed, and link-heavy posts. Admins are exempt. Settings use keys under hardened-stacks-spam-protection in the admin database or via flarum CLI.
+**Spam protection:** the hardened-stacks-spam-protection extension is bundled. It targets spam behavior (posting speed, duplicates, link-only dumps from new accounts) rather than blocking links outright. Established members can share long link lists freely. Admins are exempt. Tune it under Admin, Extensions, Spam Protection.
 
 **Coolify:** uses SERVICE_PASSWORD_FLARUMADMIN and SERVICE_PASSWORD_FLARUMDB.
 

@@ -28,7 +28,8 @@ class ValidateDiscussionContent
             $event->actor,
             (string) $title,
             'hardened-stacks-spam-protection.forum.discussion',
-            false
+            false,
+            true
         );
     }
 }
