@@ -107,12 +107,14 @@ COPY flarum/docker/nginx.conf /etc/nginx/nginx.conf
 COPY flarum/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY flarum/docker/install-flarum.php /usr/local/bin/install-flarum.php
 COPY flarum-ext/spam-protection ${FLARUM_HOME}/packages/spam-protection
+COPY flarum-ext-user-management ${FLARUM_HOME}/packages/user-management
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && cd "${FLARUM_HOME}" \
     && composer config --no-interaction repositories.spam-protection path packages/spam-protection \
-    && composer require hardened-stacks/spam-protection:@dev --no-interaction --no-progress --optimize-autoloader \
+    && composer config --no-interaction repositories.user-management path packages/user-management \
+    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/user-management:@dev --no-interaction --no-progress --optimize-autoloader \
     && rm -f /usr/local/bin/composer \
     && chown -R flarum:flarum "${FLARUM_HOME}"
 

@@ -25,6 +25,8 @@ Forum software. Built from source as a rootless image.
 
 **Spam protection:** the hardened-stacks-spam-protection extension is bundled. It targets spam behavior (posting speed, duplicates, link-only dumps from new accounts) rather than blocking links outright. Established members can share long link lists freely. Admins are exempt. Tune it under Admin, Extensions, Spam Protection.
 
+**User management:** the hardened-stacks-user-management extension is bundled. Moderators can lock posting, suspend accounts, reset avatars, and hide or delete content from a user's profile. Admins can permanently delete accounts. Open a user profile and click Moderate user, or use the button in Admin when editing a user.
+
 **Coolify:** uses SERVICE_PASSWORD_FLARUMADMIN and SERVICE_PASSWORD_FLARUMDB.
 
 The entrypoint cleans up the public URL so assets load without :8080 in links. Override with FLARUM_BASE_URL if needed.
