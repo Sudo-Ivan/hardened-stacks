@@ -5,6 +5,7 @@ COPYPARTY_PORT="${COPYPARTY_PORT:-3923}"
 COPYPARTY_ADMIN_USER="${COPYPARTY_ADMIN_USER:-admin}"
 COPYPARTY_ADMIN_PASSWORD="${COPYPARTY_ADMIN_PASSWORD:?COPYPARTY_ADMIN_PASSWORD is required}"
 COPYPARTY_SITE_NAME="${COPYPARTY_SITE_NAME:-HardenedStacks Files}"
+COPYPARTY_XFF_SRC="${COPYPARTY_XFF_SRC:-lan}"
 
 export XDG_CONFIG_HOME=/cfg
 export PYTHONUNBUFFERED=1
@@ -30,6 +31,17 @@ EOF
   fi
 }
 
+write_rproxy_config() {
+  cat > /cfg/rproxy.conf <<EOF
+[global]
+  xff-hdr: x-forwarded-for
+  xff-src: ${COPYPARTY_XFF_SRC}
+  rproxy: 1
+  xf-proto: x-forwarded-proto
+  xf-host: x-forwarded-host
+EOF
+}
+
 write_config() {
   if [ -f /cfg/copyparty.conf ]; then
     return 0
@@ -41,8 +53,6 @@ write_config() {
   name: ${COPYPARTY_SITE_NAME}
   no-crt
   hist: /cfg/hists/
-  xff-hdr: x-forwarded-for
-  rproxy: 1
   ansi
   e2dsa
   e2ts
@@ -75,8 +85,9 @@ EOF
 case "${1:-serve}" in
   serve)
     seed_public_tree
+    write_rproxy_config
     write_config
-    exec /venv/bin/python -m copyparty -c /cfg/copyparty.conf -p "${COPYPARTY_PORT}"
+    exec /venv/bin/python -m copyparty -c /cfg/copyparty.conf -c /cfg/rproxy.conf -p "${COPYPARTY_PORT}"
     ;;
   *)
     exec "$@"

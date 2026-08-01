@@ -52,7 +52,9 @@ Image: `ghcr.io/sudo-ivan/hardened-stacks/copyparty`
 
 Set `COPYPARTY_ADMIN_PASSWORD` before first deploy. Coolify generates `SERVICE_PASSWORD_COPYPARTYADMIN`.
 
-Optional: `COPYPARTY_SITE_NAME` (browser title).
+Optional: `COPYPARTY_SITE_NAME` (browser title), `COPYPARTY_XFF_SRC` (trusted reverse-proxy CIDRs, default `lan` for Docker/Coolify).
+
+Behind Coolify or another reverse proxy, copyparty trusts `X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Forwarded-Host` from private-network proxies. This fixes CORS errors when the public URL is HTTPS.
 
 Public layout under `/w`:
 

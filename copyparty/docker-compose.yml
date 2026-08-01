@@ -17,6 +17,7 @@ services:
       - COPYPARTY_ADMIN_USER=${COPYPARTY_ADMIN_USER:-admin}
       - COPYPARTY_ADMIN_PASSWORD=${COPYPARTY_ADMIN_PASSWORD:?}
       - COPYPARTY_SITE_NAME=${COPYPARTY_SITE_NAME:-HardenedStacks Files}
+      - COPYPARTY_XFF_SRC=${COPYPARTY_XFF_SRC:-lan}
       - TZ=${TZ:-UTC}
     volumes:
       - copyparty_cfg:/cfg
