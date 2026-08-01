@@ -4,15 +4,9 @@ namespace HardenedStacks\UserManagement\Api\Serializer;
 
 use Flarum\Api\Serializer\UserSerializer;
 use Flarum\User\User;
-use HardenedStacks\UserManagement\Service\UserModerator;
 
 class AddUserModerationAttributes
 {
-    public function __construct(
-        private UserModerator $moderator
-    ) {
-    }
-
     public function __invoke(UserSerializer $serializer, User $user, array $attributes): array
     {
         $attributes['canPmgModerate'] = false;
@@ -21,27 +15,45 @@ class AddUserModerationAttributes
 
         $actor = $serializer->getActor();
 
-        if ($actor->isGuest()) {
+        if ($actor->isGuest() || (int) $actor->id === (int) $user->id) {
             return $attributes;
         }
 
-        $actorId = (int) $actor->id;
-        $userId = (int) $user->id;
-        $canModerate = $actor->hasPermission('pmg.moderateUsers');
-
-        if ($actorId === $userId || $canModerate) {
-            $attributes['pmgPostingLocked'] = $this->moderator->isPostingLocked($user);
-            $attributes['pmgPostingLockMessage'] = $this->moderator->postingLockMessage($user);
-            $attributes['pmgSuspended'] = $this->moderator->isSuspended($user);
-            $attributes['pmgSuspendedUntil'] = $user->getPreference('pmgSuspendedUntil');
+        if (! $actor->hasPermission('pmg.moderateUsers') || $user->isAdmin()) {
+            return $attributes;
         }
 
-        if ($canModerate && $actorId !== $userId && ! $user->isAdmin()) {
-            $attributes['canPmgModerate'] = true;
-            $attributes['canPmgPurgeContent'] = $actor->hasPermission('pmg.purgeContent');
-            $attributes['canPmgDeleteUser'] = $actor->hasPermission('pmg.deleteUsers');
+        $attributes['canPmgModerate'] = true;
+        $attributes['canPmgPurgeContent'] = $actor->hasPermission('pmg.purgeContent');
+        $attributes['canPmgDeleteUser'] = $actor->hasPermission('pmg.deleteUsers');
+        $attributes['pmgPostingLocked'] = (bool) $user->getPreference('pmgPostingLocked');
+        $attributes['pmgSuspended'] = $this->isSuspended($user);
+        $attributes['pmgSuspendedUntil'] = (string) ($user->getPreference('pmgSuspendedUntil') ?? '');
+
+        $message = trim((string) $user->getPreference('pmgPostingLockMessage', ''));
+        if ($message !== '') {
+            $attributes['pmgPostingLockMessage'] = $message;
         }
 
         return $attributes;
+    }
+
+    private function isSuspended(User $user): bool
+    {
+        $until = $user->getPreference('pmgSuspendedUntil');
+
+        if (! is_string($until) || $until === '') {
+            return false;
+        }
+
+        if ($until === 'forever') {
+            return true;
+        }
+
+        try {
+            return \Carbon\Carbon::parse($until)->isFuture();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

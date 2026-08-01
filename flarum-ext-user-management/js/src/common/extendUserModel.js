@@ -11,9 +11,27 @@ Object.assign(User.prototype, {
     return !!this.attribute('canPmgDeleteUser');
   },
   pmgPostingLocked() {
-    return !!this.attribute('pmgPostingLocked');
+    if (this.attribute('pmgPostingLocked') !== undefined) {
+      return !!this.attribute('pmgPostingLocked');
+    }
+
+    return !!this.preferences()?.pmgPostingLocked;
   },
   pmgSuspended() {
-    return !!this.attribute('pmgSuspended');
+    if (this.attribute('pmgSuspended') !== undefined) {
+      return !!this.attribute('pmgSuspended');
+    }
+
+    const until = this.preferences()?.pmgSuspendedUntil;
+    if (!until) {
+      return false;
+    }
+
+    if (until === 'forever') {
+      return true;
+    }
+
+    const parsed = Date.parse(until);
+    return !Number.isNaN(parsed) && parsed > Date.now();
   },
 });

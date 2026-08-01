@@ -1,7 +1,13 @@
 <?php
 
+use Illuminate\Database\Schema\Builder;
+
 return [
-    'up' => function ($schema) {
+    'up' => function (Builder $schema) {
+        if ($schema->hasTable('pmg_moderation_log')) {
+            return;
+        }
+
         $schema->create('pmg_moderation_log', function ($table) {
             $table->increments('id');
             $table->unsignedInteger('actor_id');
@@ -15,7 +21,7 @@ return [
             $table->index('created_at');
         });
     },
-    'down' => function ($schema) {
-        $schema->drop('pmg_moderation_log');
+    'down' => function (Builder $schema) {
+        $schema->dropIfExists('pmg_moderation_log');
     },
 ];

@@ -12,7 +12,6 @@ use HardenedStacks\UserManagement\Api\Controller\ListUserPostsController;
 use HardenedStacks\UserManagement\Api\Controller\ModerateUserController;
 use HardenedStacks\UserManagement\Api\Serializer\AddUserModerationAttributes;
 use HardenedStacks\UserManagement\Listener\BlockLockedUserFromPosting;
-use HardenedStacks\UserManagement\Listener\RevokeAccessFromSuspendedUsers;
 
 return [
     (new Extend\Frontend('forum'))
@@ -34,8 +33,7 @@ return [
     (new Extend\User())
         ->registerPreference('pmgPostingLocked', 'boolval', false)
         ->registerPreference('pmgPostingLockMessage', null, '')
-        ->registerPreference('pmgSuspendedUntil', null, null)
-        ->permissionGroups(RevokeAccessFromSuspendedUsers::class),
+        ->registerPreference('pmgSuspendedUntil', null, null),
 
     (new Extend\Policy())
         ->modelPolicy(Post::class, PostPolicy::class)
