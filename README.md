@@ -70,7 +70,9 @@ Git hosting based on [Forgejo](https://forgejo.org/docs/latest/). Uses the offic
 **CAPTCHA:** Forgejo does not support ALTCHA. For self-hosted bot protection on registration, use one of these:
 
 - Built-in image captcha: set FORGEJO_ENABLE_IMAGE_CAPTCHA=true
-- mCaptcha (proof-of-work, closest to ALTCHA): run the optional stack with `docker compose --profile captcha up`, create a sitekey at the mCaptcha UI, then set FORGEJO_MCAPTCHA_URL, FORGEJO_MCAPTCHA_SITEKEY, and FORGEJO_MCAPTCHA_SECRET on Forgejo
+- mCaptcha (proof-of-work, closest to ALTCHA): use the extra compose file, create a sitekey at the mCaptcha UI, then set FORGEJO_MCAPTCHA_URL, FORGEJO_MCAPTCHA_SITEKEY, and FORGEJO_MCAPTCHA_SECRET on Forgejo:
+
+    docker compose -f docker-compose.yml -f docker-compose.captcha.yml up -d
 
 **Note:** Forgejo runs as UID 1000. The other stacks use 10001.
 
