@@ -1,0 +1,18 @@
+hardened-stacks-altcha:
+  admin:
+    settings:
+      enabled_label: Enable ALTCHA
+      enabled_help: Requires ALTCHA_HMAC_SECRET in the environment or the secret field below.
+      hmac_secret_label: HMAC secret (optional)
+      hmac_secret_help: Leave empty to use ALTCHA_HMAC_SECRET from the environment.
+      cost_label: Proof-of-work cost
+      cost_help: Higher values are slower for bots. Default 5000.
+      protect_registration_label: Protect registration
+      protect_login_label: Protect login
+      protect_password_reset_label: Protect password reset
+      protect_discussion_label: Protect new discussions
+      protect_reply_label: Protect replies
+  forum:
+    challenge_not_ready: Security check is still running. Please wait a moment and try again.
+  validation:
+    failed: Security verification failed. Please try again.

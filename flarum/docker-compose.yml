@@ -34,6 +34,7 @@ services:
       - DB_PREFIX=${DB_PREFIX:-flarum_}
       - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
       - PHP_UPLOAD_MAX_SIZE=${PHP_UPLOAD_MAX_SIZE:-16M}
+      - ALTCHA_HMAC_SECRET=${ALTCHA_HMAC_SECRET:-}
       - TZ=${TZ:-UTC}
     volumes:
       - flarum_persist:/persist

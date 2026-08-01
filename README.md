@@ -27,7 +27,9 @@ Forum software. Built from source as a rootless image.
 
 **User management:** the hardened-stacks-user-management extension is bundled. Moderators can lock posting, suspend accounts, reset avatars, and hide or delete content from a user's profile. Admins can permanently delete accounts. Open a user profile and click Moderate user, or use the button in Admin when editing a user.
 
-**Coolify:** uses SERVICE_PASSWORD_FLARUMADMIN and SERVICE_PASSWORD_FLARUMDB.
+**ALTCHA:** the hardened-stacks-altcha extension is bundled for self-hosted proof-of-work on registration (and optionally login or password reset). Set ALTCHA_HMAC_SECRET in the environment. Generate one with `openssl rand -hex 32`. No separate ALTCHA container is needed. Tune actions under Admin, Extensions, ALTCHA.
+
+**Coolify:** uses SERVICE_PASSWORD_FLARUMADMIN and SERVICE_PASSWORD_FLARUMDB. Add ALTCHA_HMAC_SECRET as a service secret.
 
 The entrypoint cleans up the public URL so assets load without :8080 in links. Override with FLARUM_BASE_URL if needed.
 
@@ -64,6 +66,11 @@ Git hosting based on [Forgejo](https://forgejo.org/docs/latest/). Uses the offic
 **First deploy:** set FORGEJO_DB_PASSWORD locally. Coolify provides SERVICE_PASSWORD_FORGEJODB. Finish setup in the web installer.
 
 **Git SSH:** expose port 2222 separately if you want git@ clone URLs over SSH.
+
+**CAPTCHA:** Forgejo does not support ALTCHA. For self-hosted bot protection on registration, use one of these:
+
+- Built-in image captcha: set FORGEJO_ENABLE_IMAGE_CAPTCHA=true
+- mCaptcha (proof-of-work, closest to ALTCHA): run the optional stack with `docker compose --profile captcha up`, create a sitekey at the mCaptcha UI, then set FORGEJO_MCAPTCHA_URL, FORGEJO_MCAPTCHA_SITEKEY, and FORGEJO_MCAPTCHA_SECRET on Forgejo
 
 **Note:** Forgejo runs as UID 1000. The other stacks use 10001.
 

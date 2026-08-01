@@ -41,4 +41,20 @@ if [ -n "${FORGEJO_DISABLE_REGISTRATION:-}" ]; then
   export FORGEJO__service__DISABLE_REGISTRATION="$FORGEJO_DISABLE_REGISTRATION"
 fi
 
+if [ -n "${FORGEJO_MCAPTCHA_URL:-}" ] && [ -n "${FORGEJO_MCAPTCHA_SITEKEY:-}" ] && [ -n "${FORGEJO_MCAPTCHA_SECRET:-}" ]; then
+  export FORGEJO__service__ENABLE_CAPTCHA=true
+  export FORGEJO__service__CAPTCHA_TYPE=mcaptcha
+  export FORGEJO__service__MCAPTCHA_URL="${FORGEJO_MCAPTCHA_URL}"
+  export FORGEJO__service__MCAPTCHA_SITEKEY="${FORGEJO_MCAPTCHA_SITEKEY}"
+  export FORGEJO__service__MCAPTCHA_SECRET="${FORGEJO_MCAPTCHA_SECRET}"
+  if [ -n "${FORGEJO_REQUIRE_CAPTCHA_FOR_LOGIN:-}" ]; then
+    export FORGEJO__service__REQUIRE_CAPTCHA_FOR_LOGIN="$FORGEJO_REQUIRE_CAPTCHA_FOR_LOGIN"
+  fi
+fi
+
+if [ "${FORGEJO_ENABLE_IMAGE_CAPTCHA:-}" = "true" ]; then
+  export FORGEJO__service__ENABLE_CAPTCHA=true
+  export FORGEJO__service__CAPTCHA_TYPE=image
+fi
+
 exec /usr/local/bin/docker-entrypoint.sh "$@"
