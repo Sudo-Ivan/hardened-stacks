@@ -10,6 +10,7 @@ ARG COPYPARTY_COMMIT
 
 RUN apk add --no-cache \
       build-base \
+      curl \
       git \
       libffi-dev \
       libjpeg-turbo-dev \
@@ -25,6 +26,19 @@ RUN git init . \
     && git remote add origin https://github.com/9001/copyparty.git \
     && git fetch --depth 1 origin "${COPYPARTY_COMMIT}" \
     && git checkout FETCH_HEAD
+
+ARG COPYPARTY_RELEASE_VERSION=1.20.19
+
+RUN curl -fsSL "https://github.com/9001/copyparty/releases/download/v${COPYPARTY_RELEASE_VERSION}/copyparty-${COPYPARTY_RELEASE_VERSION}.tar.gz" \
+      -o /tmp/copyparty-release.tar.gz \
+    && rm -rf copyparty/web/deps \
+    && tar -xzf /tmp/copyparty-release.tar.gz \
+      --strip-components=3 \
+      -C copyparty/web \
+      "copyparty-${COPYPARTY_RELEASE_VERSION}/copyparty/web/deps" \
+    && rm -f /tmp/copyparty-release.tar.gz \
+    && test -f copyparty/web/deps/sha512.hw.js.gz \
+    && test -f copyparty/web/deps/prismd.css.gz
 
 RUN python3 -m venv /venv \
     && /venv/bin/pip install --no-cache-dir --upgrade pip \
