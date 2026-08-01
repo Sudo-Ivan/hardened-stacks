@@ -54,11 +54,9 @@ RUN apk add --no-cache \
 COPY --from=builder /venv /venv
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY docker/pmg-browser.css /usr/share/copyparty/pmg-browser.css
 
 RUN chmod 0555 /usr/local/bin/entrypoint.sh \
-    && chmod 0444 /usr/share/copyparty/pmg-browser.css \
-    && chown copyparty:copyparty /usr/local/bin/entrypoint.sh /usr/share/copyparty/pmg-browser.css
+    && chown copyparty:copyparty /usr/local/bin/entrypoint.sh
 
 USER copyparty:copyparty
 

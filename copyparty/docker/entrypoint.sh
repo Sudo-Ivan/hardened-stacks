@@ -5,8 +5,6 @@ COPYPARTY_PORT="${COPYPARTY_PORT:-3923}"
 COPYPARTY_ADMIN_USER="${COPYPARTY_ADMIN_USER:-admin}"
 COPYPARTY_ADMIN_PASSWORD="${COPYPARTY_ADMIN_PASSWORD:?COPYPARTY_ADMIN_PASSWORD is required}"
 COPYPARTY_SITE_NAME="${COPYPARTY_SITE_NAME:-HardenedStacks Files}"
-COPYPARTY_THEME="${COPYPARTY_THEME:-10}"
-COPYPARTY_THEMES="${COPYPARTY_THEMES:-12}"
 
 export XDG_CONFIG_HOME=/cfg
 export PYTHONUNBUFFERED=1
@@ -51,9 +49,6 @@ write_config() {
   no-robots
   force-js
   grid
-  theme: ${COPYPARTY_THEME}
-  themes: ${COPYPARTY_THEMES}
-  css-browser: /usr/share/copyparty/pmg-browser.css
   sort: named
   df: 2
   ver

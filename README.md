@@ -52,7 +52,7 @@ Image: `ghcr.io/sudo-ivan/hardened-stacks/copyparty`
 
 Set `COPYPARTY_ADMIN_PASSWORD` before first deploy. Coolify generates `SERVICE_PASSWORD_COPYPARTYADMIN`.
 
-Optional: `COPYPARTY_SITE_NAME` (browser title), `COPYPARTY_THEME` (default `10`, the built-in PMG minimalist dark theme).
+Optional: `COPYPARTY_SITE_NAME` (browser title).
 
 Public layout under `/w`:
 
@@ -62,7 +62,7 @@ Public layout under `/w`:
 
 Volumes: `/cfg` (config and index), `/w` (shared files), `/state` (runtime state).
 
-Existing installs keep `/cfg/copyparty.conf` until removed. Delete that file and redeploy to pick up the public layout and theme defaults.
+Existing installs keep `/cfg/copyparty.conf` until removed. Delete that file and redeploy to pick up the public layout defaults.
 
 ## Backup CLI
 
