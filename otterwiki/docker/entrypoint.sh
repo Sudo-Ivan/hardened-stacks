@@ -24,6 +24,10 @@ init_repository() {
   if [ ! -d "${OTTERWIKI_REPOSITORY}/.git" ]; then
     git init -b main "${OTTERWIKI_REPOSITORY}"
   fi
+
+  if [ -f "${OTTERWIKI_REPOSITORY}/.git/index.lock" ]; then
+    rm -f "${OTTERWIKI_REPOSITORY}/.git/index.lock"
+  fi
 }
 
 init_settings() {
@@ -45,6 +49,10 @@ configure_nginx() {
     -e "s|STATIC_PATH_PLACEHOLDER|${static_path}|g" \
     -e "s|client_max_body_size 32m;|client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};|g" \
     /etc/nginx/nginx.conf > /tmp/nginx/nginx.conf
+}
+
+bootstrap_app() {
+  python3 -c 'import otterwiki.server'
 }
 
 start_services() {
@@ -80,6 +88,7 @@ case "${1:-serve}" in
     init_settings
     configure_nginx
     nginx -t -c /tmp/nginx/nginx.conf
+    bootstrap_app
     start_services
     ;;
   *)
