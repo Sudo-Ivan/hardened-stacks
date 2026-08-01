@@ -36,6 +36,34 @@ Register the first account after deploy. It becomes the admin account.
 
 Data lives in the `/app-data` volume (sqlite db, git repo, settings).
 
+## Copyparty
+
+Path: `copyparty/`
+
+Based on [9001/copyparty](https://github.com/9001/copyparty), built from source with a hardened rootless image.
+
+Compose file: `copyparty/docker-compose.yml`
+
+Coolify compose file: `copyparty/docker-compose.coolify.yml`
+
+Assign domain `https://files.example.com:3923` to the `copyparty` service in Coolify.
+
+Image: `ghcr.io/sudo-ivan/hardened-stacks/copyparty`
+
+Set `COPYPARTY_ADMIN_PASSWORD` before first deploy. Coolify generates `SERVICE_PASSWORD_COPYPARTYADMIN`.
+
+Optional: `COPYPARTY_SITE_NAME` (browser title), `COPYPARTY_THEME` (default `10`, the built-in PMG minimalist dark theme).
+
+Public layout under `/w`:
+
+- `public/` served at `/` (anonymous read, grid view, search indexing)
+- `private/` admin-only under `/manage/private/`
+- `/manage/` full tree for the admin account (uploads require login)
+
+Volumes: `/cfg` (config and index), `/w` (shared files), `/state` (runtime state).
+
+Existing installs keep `/cfg/copyparty.conf` until removed. Delete that file and redeploy to pick up the public layout and theme defaults.
+
 ## Backup CLI
 
 Path: `flarum-backup-cli/`

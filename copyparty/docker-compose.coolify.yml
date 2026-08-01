@@ -1,0 +1,39 @@
+name: copyparty
+
+services:
+  copyparty:
+    image: ${COPYPARTY_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/copyparty:latest}
+    restart: unless-stopped
+    user: "10001:10001"
+    stop_grace_period: 15s
+    expose:
+      - "3923"
+    environment:
+      - SERVICE_URL_COPYPARTY_3923
+      - COPYPARTY_ADMIN_USER=${COPYPARTY_ADMIN_USER:-admin}
+      - COPYPARTY_ADMIN_PASSWORD=${SERVICE_PASSWORD_COPYPARTYADMIN:?}
+      - COPYPARTY_SITE_NAME=${COPYPARTY_SITE_NAME:-HardenedStacks Files}
+      - COPYPARTY_THEME=${COPYPARTY_THEME:-10}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - copyparty_cfg:/cfg
+      - copyparty_data:/w
+      - copyparty_state:/state
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3923/?reset=/._ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  copyparty_cfg:
+  copyparty_data:
+  copyparty_state:
