@@ -1,0 +1,95 @@
+services:
+  flarum:
+    build:
+      context: ..
+      dockerfile: flarum/Dockerfile
+      args:
+        FLARUM_VERSION: ${FLARUM_VERSION:-1.8.17}
+        PHP_VERSION: ${PHP_VERSION:-8.4}
+        FLARUM_UID: "10001"
+        FLARUM_GID: "10001"
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-none}
+    image: ghcr.io/sudo-ivan/hardened-stacks/flarum:local
+    restart: unless-stopped
+    user: "10001:10001"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    expose:
+      - "8080"
+    environment:
+      - SERVICE_URL_FLARUM_8080
+      - FLARUM_BASE_URL=${SERVICE_URL_FLARUM_8080}
+      - FLARUM_FORUM_TITLE=${FLARUM_FORUM_TITLE:?}
+      - FLARUM_ADMIN_USERNAME=${FLARUM_ADMIN_USERNAME:-admin}
+      - FLARUM_ADMIN_PASSWORD=${SERVICE_PASSWORD_FLARUMADMIN}
+      - FLARUM_ADMIN_EMAIL=${FLARUM_ADMIN_EMAIL:?}
+      - FLARUM_DEBUG=${FLARUM_DEBUG:-false}
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${MYSQL_DATABASE:-flarum}
+      - DB_USERNAME=${MYSQL_USER:-flarum}
+      - DB_PASSWORD=${SERVICE_PASSWORD_FLARUMDB}
+      - DB_PREFIX=${DB_PREFIX:-flarum_}
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
+      - PHP_UPLOAD_MAX_SIZE=${PHP_UPLOAD_MAX_SIZE:-16M}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - flarum_persist:/persist
+      - flarum_storage:/app/storage
+      - flarum_assets:/app/public/assets
+      - flarum_backups:/backups
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+      - /var/lib/nginx/tmp:size=64m,uid=10001,gid=10001,mode=0755
+      - /var/run:size=16m,uid=10001,gid=10001,mode=0755
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  mariadb:
+    image: mariadb:11.4@sha256:a794d9eb009e20de605858a11f32f63b4075cbd197c650436f0e3b457e4caed7
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-flarum}
+      - MYSQL_USER=${MYSQL_USER:-flarum}
+      - MYSQL_PASSWORD=${SERVICE_PASSWORD_FLARUMDB}
+      - MYSQL_ROOT_PASSWORD=${SERVICE_PASSWORD_FLARUMROOT}
+      - MARIADB_AUTO_UPGRADE=1
+      - TZ=${TZ:-UTC}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /run/mysqld:size=16m
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  flarum_persist:
+  flarum_storage:
+  flarum_assets:
+  flarum_backups:
+  mariadb_data:

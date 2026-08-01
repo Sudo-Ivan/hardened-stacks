@@ -1,0 +1,12 @@
+.git
+.gitignore
+**/.git
+**/*.md
+!flarum-backup-cli/README.md
+**/.env
+**/.env.*
+**/bin/
+**/*~
+**/*.swp
+.github
+agent-transcripts

@@ -1,0 +1,7 @@
+# Ignore build artifacts and local env files
+**/.env
+**/.env.*
+**/bin/
+*.exe
+*.test
+.DS_Store
