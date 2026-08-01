@@ -1,0 +1,12 @@
+hardened-stacks-spam-protection:
+  forum:
+    post:
+      rate_limited: Please wait a little before posting again.
+      too_many_links: This post has too many links.
+      too_many_links_new_user: New members can only include a few links per post.
+      too_link_heavy: This post looks too link-heavy.
+    discussion:
+      rate_limited: Please wait a little before starting another discussion.
+      too_many_links: This title has too many links.
+      too_many_links_new_user: New members can only include a few links in discussion titles.
+      too_link_heavy: This title looks too link-heavy.
