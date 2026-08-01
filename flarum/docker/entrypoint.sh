@@ -125,7 +125,7 @@ sync_config() {
 install_or_migrate() {
   if [ ! -f /persist/config.php ]; then
     echo "Installing Flarum..."
-    install_file="$(mktemp /tmp/flarum-install.XXXXXX.json)"
+    install_file="$(mktemp /tmp/flarum-install.XXXXXX)"
     write_install_file "${install_file}"
     php flarum install --file="${install_file}"
     rm -f "${install_file}"
