@@ -14,9 +14,25 @@ Assign domain `https://your-forum.example.com:8080` to the `flarum` service in C
 
 Image: `ghcr.io/sudo-ivan/hardened-stacks/flarum`
 
-Assign a Coolify domain to the `flarum` service (container port 8080).
-
 Set `FLARUM_FORUM_TITLE` and `FLARUM_ADMIN_EMAIL` before first deploy.
+
+## Otter Wiki
+
+Path: `otterwiki/`
+
+Based on [redimp/otterwiki](https://github.com/redimp/otterwiki), built from source with a hardened rootless image.
+
+Compose file: `otterwiki/docker-compose.yml`
+
+Coolify compose file: `otterwiki/docker-compose.coolify.yml`
+
+Assign domain `https://your-wiki.example.com:8080` to the `otterwiki` service in Coolify.
+
+Image: `ghcr.io/sudo-ivan/hardened-stacks/otterwiki`
+
+Register the first account after deploy. It becomes the admin account.
+
+Data lives in the `/app-data` volume (sqlite db, git repo, settings).
 
 ## Backup CLI
 
