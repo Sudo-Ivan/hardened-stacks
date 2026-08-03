@@ -51,8 +51,6 @@ services:
     restart: unless-stopped
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-mediawiki}
-      - MYSQL_USER=${MYSQL_USER:-mediawiki}
-      - MYSQL_PASSWORD=${MEDIAWIKI_DB_PASSWORD:?}
       - MYSQL_ROOT_PASSWORD=${MEDIAWIKI_DB_ROOT_PASSWORD:?}
       - MARIADB_AUTO_UPGRADE=1
       - TZ=${TZ:-UTC}

@@ -41,19 +41,7 @@ export DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_ROOT_PASSWORD
 export MEDIAWIKI_SITE_NAME MEDIAWIKI_SITE_SERVER
 export MEDIAWIKI_ADMIN_USER MEDIAWIKI_ADMIN_PASSWORD MEDIAWIKI_ADMIN_EMAIL
 
-mkdir -p "${MEDIAWIKI_PERSIST}/images"
-
-link_persist() {
-  if [ ! -L "${MEDIAWIKI_HOME}/LocalSettings.php" ]; then
-    rm -f "${MEDIAWIKI_HOME}/LocalSettings.php"
-    ln -sfn "${MEDIAWIKI_PERSIST}/LocalSettings.php" "${MEDIAWIKI_HOME}/LocalSettings.php"
-  fi
-
-  if [ ! -L "${MEDIAWIKI_HOME}/images" ]; then
-    rm -rf "${MEDIAWIKI_HOME}/images"
-    ln -sfn "${MEDIAWIKI_PERSIST}/images" "${MEDIAWIKI_HOME}/images"
-  fi
-}
+mkdir -p "${MEDIAWIKI_PERSIST}/images" "${MEDIAWIKI_PERSIST}/cache"
 
 wait_for_db() {
   echo "Waiting for database ${DB_HOST}:${DB_PORT}..."
@@ -61,12 +49,20 @@ wait_for_db() {
   while [ "$i" -lt 60 ]; do
     if php -r "
       try {
-        new PDO(
-          'mysql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT'),
-          getenv('DB_USERNAME'),
-          getenv('DB_PASSWORD'),
-          [PDO::ATTR_TIMEOUT => 3]
-        );
+        \$mysqli = mysqli_init();
+        if (! \$mysqli) {
+          exit(1);
+        }
+        \$mysqli->options(MYSQLI_OPT_CONNECT_TIMEOUT, 3);
+        if (! \$mysqli->real_connect(
+          getenv('DB_HOST'),
+          'root',
+          getenv('DB_ROOT_PASSWORD'),
+          getenv('DB_DATABASE'),
+          (int) getenv('DB_PORT')
+        )) {
+          exit(1);
+        }
         exit(0);
       } catch (Throwable \$e) {
         exit(1);
@@ -132,7 +128,6 @@ start_apache() {
 
 case "${1:-serve}" in
   serve)
-    link_persist
     wait_for_db
     install_mediawiki
     update_mediawiki

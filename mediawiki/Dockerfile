@@ -20,7 +20,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && groupmod -g "${MEDIAWIKI_GID}" www-data \
     && usermod -u "${MEDIAWIKI_UID}" -g www-data www-data \
-    && mkdir -p /persist/images /tmp/apache \
+    && mkdir -p /persist/images /persist/cache /tmp/apache \
+    && rm -f /var/www/html/LocalSettings.php \
+    && rm -rf /var/www/html/images /var/www/html/cache \
+    && ln -sfn /persist/LocalSettings.php /var/www/html/LocalSettings.php \
+    && ln -sfn /persist/images /var/www/html/images \
+    && ln -sfn /persist/cache /var/www/html/cache \
     && sed -i "s/Listen 80/Listen ${APACHE_LISTEN_PORT}/" /etc/apache2/ports.conf \
     && sed -i "s/:80>/:${APACHE_LISTEN_PORT}>/" /etc/apache2/sites-available/000-default.conf \
     && chown -R www-data:www-data /var/www/html /persist /tmp/apache
