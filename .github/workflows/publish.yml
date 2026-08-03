@@ -3,7 +3,7 @@ name: publish
 on:
   push:
     branches: [main, master]
-    tags: ["flarum-v*", "otterwiki-v*", "copyparty-v*", "forgejo-v*", "v*"]
+    tags: ["flarum-v*", "mediawiki-v*", "copyparty-v*", "forgejo-v*", "v*"]
   workflow_dispatch:
 
 permissions: {}
@@ -104,8 +104,8 @@ jobs:
           cache-from: type=gha,scope=flarum
           cache-to: type=gha,mode=max,scope=flarum
 
-  publish-otterwiki:
-    name: publish otterwiki
+  publish-mediawiki:
+    name: publish mediawiki
     needs: guard
     if: needs.guard.outputs.publish == 'true'
     runs-on: ubuntu-latest
@@ -117,7 +117,7 @@ jobs:
       attestations: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: sudo-ivan/hardened-stacks/otterwiki
+      IMAGE_NAME: sudo-ivan/hardened-stacks/mediawiki
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -150,15 +150,15 @@ jobs:
         id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          context: otterwiki
-          file: otterwiki/Dockerfile
+          context: mediawiki
+          file: mediawiki/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
           sbom: true
-          cache-from: type=gha,scope=otterwiki
-          cache-to: type=gha,mode=max,scope=otterwiki
+          cache-from: type=gha,scope=mediawiki
+          cache-to: type=gha,mode=max,scope=mediawiki
 
   publish-copyparty:
     name: publish copyparty

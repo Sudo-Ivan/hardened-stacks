@@ -1,5 +1,0 @@
-.git
-.gitignore
-**/.git
-**/*.md
-.dockerignore

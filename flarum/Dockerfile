@@ -10,11 +10,11 @@ FROM ${NODE_IMAGE} AS extension-js
 WORKDIR /build
 
 COPY flarum-ext/altcha/js ./altcha
-COPY flarum-ext-user-management/js ./user-management
+COPY flarum-ext/delete-users/js ./delete-users
 COPY flarum-ext/spam-protection/js ./spam-protection
 
 RUN cd altcha && npm ci && npm run build \
-    && cd ../user-management && npm ci && npm run build \
+    && cd ../delete-users && npm ci && npm run build \
     && cd ../spam-protection && npm ci && npm run build
 
 FROM ${GO_IMAGE} AS backup-cli
@@ -120,19 +120,19 @@ COPY flarum/docker/nginx.conf /etc/nginx/nginx.conf
 COPY flarum/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY flarum/docker/install-flarum.php /usr/local/bin/install-flarum.php
 COPY flarum-ext/spam-protection ${FLARUM_HOME}/packages/spam-protection
-COPY flarum-ext-user-management ${FLARUM_HOME}/packages/user-management
+COPY flarum-ext/delete-users ${FLARUM_HOME}/packages/delete-users
 COPY flarum-ext/altcha ${FLARUM_HOME}/packages/altcha
 COPY --from=extension-js /build/altcha/dist ${FLARUM_HOME}/packages/altcha/js/dist
-COPY --from=extension-js /build/user-management/dist ${FLARUM_HOME}/packages/user-management/js/dist
+COPY --from=extension-js /build/delete-users/dist ${FLARUM_HOME}/packages/delete-users/js/dist
 COPY --from=extension-js /build/spam-protection/dist ${FLARUM_HOME}/packages/spam-protection/js/dist
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && cd "${FLARUM_HOME}" \
     && composer config --no-interaction repositories.spam-protection path packages/spam-protection \
-    && composer config --no-interaction repositories.user-management path packages/user-management \
+    && composer config --no-interaction repositories.delete-users path packages/delete-users \
     && composer config --no-interaction repositories.altcha path packages/altcha \
-    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/user-management:@dev hardened-stacks/altcha:@dev --no-interaction --no-progress --optimize-autoloader \
+    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/delete-users:@dev hardened-stacks/altcha:@dev --no-interaction --no-progress --optimize-autoloader \
     && rm -f /usr/local/bin/composer \
     && chown -R flarum:flarum "${FLARUM_HOME}"
 

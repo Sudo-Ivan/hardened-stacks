@@ -1,0 +1,79 @@
+name: mediawiki
+
+services:
+  mediawiki:
+    image: ${MEDIAWIKI_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/mediawiki:latest}
+    restart: unless-stopped
+    user: "10001:10001"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    expose:
+      - "8080"
+    environment:
+      - SERVICE_URL_MEDIAWIKI_8080
+      - MEDIAWIKI_SITE_NAME=${MEDIAWIKI_SITE_NAME:?}
+      - MEDIAWIKI_SITE_SERVER=${MEDIAWIKI_SITE_SERVER:-${SERVICE_URL_MEDIAWIKI_8080:?}}
+      - MEDIAWIKI_ADMIN_USER=${MEDIAWIKI_ADMIN_USER:-admin}
+      - MEDIAWIKI_ADMIN_PASSWORD=${SERVICE_PASSWORD_MEDIAWIKIADMIN:?}
+      - MEDIAWIKI_ADMIN_EMAIL=${MEDIAWIKI_ADMIN_EMAIL:?}
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${MYSQL_DATABASE:-mediawiki}
+      - DB_USERNAME=${MYSQL_USER:-mediawiki}
+      - DB_PASSWORD=${SERVICE_PASSWORD_MEDIAWIKIDB:?}
+      - DB_ROOT_PASSWORD=${SERVICE_PASSWORD_MEDIAWIKIROOT:?}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - mediawiki_persist:/persist
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+      - /tmp/apache:size=64m,uid=10001,gid=10001,mode=0755
+      - /var/run/apache2:size=16m,uid=10001,gid=10001,mode=0755
+      - /var/lock/apache2:size=8m,uid=10001,gid=10001,mode=0755
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api.php?action=query&meta=siteinfo&format=json"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 180s
+
+  mariadb:
+    image: mariadb:11.4@sha256:a794d9eb009e20de605858a11f32f63b4075cbd197c650436f0e3b457e4caed7
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-mediawiki}
+      - MYSQL_USER=${MYSQL_USER:-mediawiki}
+      - MYSQL_PASSWORD=${SERVICE_PASSWORD_MEDIAWIKIDB:?}
+      - MYSQL_ROOT_PASSWORD=${SERVICE_PASSWORD_MEDIAWIKIROOT:?}
+      - MARIADB_AUTO_UPGRADE=1
+      - TZ=${TZ:-UTC}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /run/mysqld:size=16m
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mediawiki_persist:
+  mariadb_data:

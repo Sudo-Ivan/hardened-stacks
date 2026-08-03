@@ -9,7 +9,7 @@ Images are published to ghcr.io/sudo-ivan/hardened-stacks.
 | Service | Folder | Coolify port | Image |
 |---------|--------|--------------|-------|
 | Flarum | flarum/ | 8080 | ghcr.io/sudo-ivan/hardened-stacks/flarum |
-| Otter Wiki | otterwiki/ | 8080 | ghcr.io/sudo-ivan/hardened-stacks/otterwiki |
+| MediaWiki | mediawiki/ | 8080 | ghcr.io/sudo-ivan/hardened-stacks/mediawiki |
 | Copyparty | copyparty/ | 3923 | ghcr.io/sudo-ivan/hardened-stacks/copyparty |
 | Forgejo | forgejo/ | 3000 | ghcr.io/sudo-ivan/hardened-stacks/forgejo |
 
@@ -25,7 +25,7 @@ Forum software. Built from source as a rootless image.
 
 **Spam protection:** the hardened-stacks-spam-protection extension is bundled. It targets spam behavior (posting speed, duplicates, link-only dumps from new accounts) rather than blocking links outright. Established members can share long link lists freely. Admins are exempt. Tune it under Admin, Extensions, Spam Protection.
 
-**User management:** the hardened-stacks-user-management extension is bundled. Moderators can lock posting, suspend accounts, reset avatars, and hide or delete content from a user's profile. Admins can permanently delete accounts. Open a user profile and click Moderate user, or use the button in Admin when editing a user.
+**Delete users:** the hardened-stacks-delete-users extension is bundled. Admins can permanently delete accounts from Admin when editing a user. Content is soft-deleted before the account is removed.
 
 **ALTCHA:** the hardened-stacks-altcha extension is bundled for self-hosted proof-of-work on registration (and optionally login or password reset). Set ALTCHA_HMAC_SECRET in the environment. Generate one with `openssl rand -hex 32`. No separate ALTCHA container is needed. Tune actions under Admin, Extensions, ALTCHA.
 
@@ -35,13 +35,15 @@ The entrypoint cleans up the public URL so assets load without :8080 in links. O
 
 ---
 
-## Otter Wiki
+## MediaWiki
 
-Wiki based on [redimp/otterwiki](https://github.com/redimp/otterwiki). Built from source as a rootless image.
+Wiki based on [MediaWiki](https://www.mediawiki.org/). Built from the official image as a rootless wrapper with MariaDB.
 
-**First deploy:** open the site and register. The first account is admin.
+**First deploy:** set MEDIAWIKI_SITE_NAME, MEDIAWIKI_ADMIN_EMAIL, and MEDIAWIKI_ADMIN_PASSWORD locally. Coolify provides SERVICE_PASSWORD_MEDIAWIKIADMIN, SERVICE_PASSWORD_MEDIAWIKIDB, and SERVICE_PASSWORD_MEDIAWIKIROOT.
 
-**Data:** everything lives in the app-data volume (sqlite, git repo, settings).
+**Data:** LocalSettings.php and uploaded images live in the mediawiki_persist volume.
+
+The entrypoint cleans up the public URL so links load without :8080. Override with MEDIAWIKI_SITE_SERVER if needed.
 
 ---
 

@@ -1,0 +1,5 @@
+hardened-stacks-delete-users:
+  admin:
+    delete_button: Delete user
+    delete_confirm: Permanently delete {username} and their content? This cannot be undone.
+    delete_success: User deleted.

@@ -90,11 +90,18 @@ jobs:
           docker compose logs flarum
           exit 1
 
-  otterwiki-build:
-    name: otterwiki image build
+  mediawiki-build:
+    name: mediawiki image build
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      MEDIAWIKI_SITE_NAME: ci
+      MEDIAWIKI_ADMIN_EMAIL: ci@example.com
+      MEDIAWIKI_ADMIN_PASSWORD: ci-admin-pass
+      MEDIAWIKI_DB_PASSWORD: ci-db-pass
+      MEDIAWIKI_DB_ROOT_PASSWORD: ci-root-pass
+      SERVICE_URL_MEDIAWIKI_8080: http://localhost
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -107,25 +114,28 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          context: otterwiki
-          file: otterwiki/Dockerfile
+          context: mediawiki
+          file: mediawiki/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/sudo-ivan/hardened-stacks/otterwiki:ci
-          cache-from: type=gha,scope=otterwiki
-          cache-to: type=gha,mode=max,scope=otterwiki
+          tags: ghcr.io/sudo-ivan/hardened-stacks/mediawiki:ci
+          cache-from: type=gha,scope=mediawiki
+          cache-to: type=gha,mode=max,scope=mediawiki
 
       - name: Smoke health endpoint
+        working-directory: mediawiki
+        env:
+          MEDIAWIKI_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/mediawiki:ci
         run: |
-          cid=$(docker run -d -p 127.0.0.1:18080:8080 ghcr.io/sudo-ivan/hardened-stacks/otterwiki:ci)
-          trap 'docker rm -f "$cid"' EXIT
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:18080/-/healthz >/dev/null; then
+          docker compose up -d --no-build
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 90); do
+            if curl -fsS "http://127.0.0.1:8080/api.php?action=query&meta=siteinfo&format=json" >/dev/null; then
               exit 0
             fi
-            sleep 2
+            sleep 3
           done
-          docker logs "$cid"
+          docker compose logs
           exit 1
 
   copyparty-build:
