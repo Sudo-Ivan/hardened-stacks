@@ -41,6 +41,8 @@ Wiki based on [MediaWiki](https://www.mediawiki.org/). Built from the official i
 
 **First deploy:** set MEDIAWIKI_SITE_NAME, MEDIAWIKI_ADMIN_EMAIL, and MEDIAWIKI_ADMIN_PASSWORD locally. Coolify provides SERVICE_PASSWORD_MEDIAWIKIADMIN, SERVICE_PASSWORD_MEDIAWIKIDB, and SERVICE_PASSWORD_MEDIAWIKIROOT.
 
+**Logo:** set MEDIAWIKI_LOGO_URL to your logo image URL. Default is the HardenedStacks logo at hardened-stacks.org.
+
 **Data:** LocalSettings.php and uploaded images live in the mediawiki_persist volume.
 
 The entrypoint cleans up the public URL so links load without :8080. Override with MEDIAWIKI_SITE_SERVER if needed.

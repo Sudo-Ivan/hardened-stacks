@@ -30,10 +30,12 @@ RUN apt-get update \
     && sed -i "s/:80>/:${APACHE_LISTEN_PORT}>/" /etc/apache2/sites-available/000-default.conf \
     && chown -R www-data:www-data /var/www/html /persist /tmp/apache
 
+COPY custom/CustomSettings.php ${MEDIAWIKI_HOME}/custom/CustomSettings.php
+
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod 0555 /usr/local/bin/entrypoint.sh \
-    && chown www-data:www-data /usr/local/bin/entrypoint.sh
+    && chown -R www-data:www-data /usr/local/bin/entrypoint.sh "${MEDIAWIKI_HOME}/custom"
 
 USER www-data:www-data
 

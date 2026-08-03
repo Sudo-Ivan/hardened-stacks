@@ -17,6 +17,7 @@ MEDIAWIKI_SITE_SERVER="${MEDIAWIKI_SITE_SERVER:?MEDIAWIKI_SITE_SERVER is require
 MEDIAWIKI_ADMIN_USER="${MEDIAWIKI_ADMIN_USER:-admin}"
 MEDIAWIKI_ADMIN_PASSWORD="${MEDIAWIKI_ADMIN_PASSWORD:?MEDIAWIKI_ADMIN_PASSWORD is required}"
 MEDIAWIKI_ADMIN_EMAIL="${MEDIAWIKI_ADMIN_EMAIL:?MEDIAWIKI_ADMIN_EMAIL is required}"
+MEDIAWIKI_LOGO_URL="${MEDIAWIKI_LOGO_URL:-https://hardened-stacks.org/static/img/logo.svg}"
 
 normalize_base_url() {
   url="${1%/}"
@@ -39,7 +40,7 @@ MEDIAWIKI_SITE_SERVER="$(normalize_base_url "${MEDIAWIKI_SITE_SERVER}")"
 export MEDIAWIKI_HOME MEDIAWIKI_PERSIST APACHE_LISTEN_PORT
 export DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_ROOT_PASSWORD
 export MEDIAWIKI_SITE_NAME MEDIAWIKI_SITE_SERVER
-export MEDIAWIKI_ADMIN_USER MEDIAWIKI_ADMIN_PASSWORD MEDIAWIKI_ADMIN_EMAIL
+export MEDIAWIKI_ADMIN_USER MEDIAWIKI_ADMIN_PASSWORD MEDIAWIKI_ADMIN_EMAIL MEDIAWIKI_LOGO_URL
 
 mkdir -p "${MEDIAWIKI_PERSIST}/images" "${MEDIAWIKI_PERSIST}/cache"
 
@@ -112,6 +113,18 @@ install_mediawiki() {
     }
   "
   echo "MediaWiki installation complete."
+  sync_custom_settings
+}
+
+sync_custom_settings() {
+  if [ ! -f "${MEDIAWIKI_PERSIST}/LocalSettings.php" ]; then
+    return 0
+  fi
+
+  if ! grep -q 'custom/CustomSettings.php' "${MEDIAWIKI_PERSIST}/LocalSettings.php"; then
+    printf '\nrequire_once "$IP/custom/CustomSettings.php";\n' >> "${MEDIAWIKI_PERSIST}/LocalSettings.php"
+    echo "Enabled HardenedStacks logo settings."
+  fi
 }
 
 update_mediawiki() {
@@ -130,6 +143,7 @@ case "${1:-serve}" in
   serve)
     wait_for_db
     install_mediawiki
+    sync_custom_settings
     update_mediawiki
     start_apache
     ;;
