@@ -1,0 +1,4 @@
+# One Flatpak ref per line. Runtime deps must be listed explicitly.
+# app/org.mozilla.firefox/x86_64/stable
+# runtime/org.freedesktop.Platform/x86_64/24.08
+# runtime/org.freedesktop.Platform.GL.default/x86_64/24.08

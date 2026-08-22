@@ -10,7 +10,8 @@ services:
         condition: service_healthy
     expose:
       - "3000"
-      - "2222"
+    ports:
+      - "2222:2222"
     environment:
       - SERVICE_URL_FORGEJO_3000
       - FORGEJO_ROOT_URL=${FORGEJO_ROOT_URL:-${SERVICE_URL_FORGEJO_3000:?}}

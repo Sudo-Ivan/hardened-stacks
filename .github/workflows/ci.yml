@@ -220,3 +220,44 @@ jobs:
           done
           docker compose logs
           exit 1
+
+  flathub-remote-build:
+    name: flathub-remote image build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: flathub-remote
+          file: flathub-remote/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/sudo-ivan/hardened-stacks/flathub-remote:ci
+          cache-from: type=gha,scope=flathub-remote
+          cache-to: type=gha,mode=max,scope=flathub-remote
+
+      - name: Smoke health endpoint
+        run: |
+          cid=$(docker run -d -p 127.0.0.1:18080:8080 \
+            -e FLATHUB_INITIAL_SYNC=false \
+            -e FLATHUB_SYNC_INTERVAL=0 \
+            ghcr.io/sudo-ivan/hardened-stacks/flathub-remote:ci)
+          trap 'docker rm -f "$cid"' EXIT
+          for i in $(seq 1 30); do
+            if wget --spider -q "http://127.0.0.1:18080/health"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$cid"
+          exit 1

@@ -1,0 +1,39 @@
+name: flathub-remote
+
+services:
+  flathub-remote:
+    image: ${FLATHUB_REMOTE_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/flathub-remote:latest}
+    restart: unless-stopped
+    user: "10001:10001"
+    expose:
+      - "8080"
+    environment:
+      - SERVICE_URL_FLATHUB_8080
+      - FLATHUB_PUBLIC_URL=${FLATHUB_PUBLIC_URL:-${SERVICE_URL_FLATHUB_8080:?}}
+      - FLATHUB_MIRROR_REFS=${FLATHUB_MIRROR_REFS:-}
+      - FLATHUB_SYNC_INTERVAL=${FLATHUB_SYNC_INTERVAL:-86400}
+      - FLATHUB_INITIAL_SYNC=${FLATHUB_INITIAL_SYNC:-true}
+      - FLATHUB_REMOTE_TITLE=${FLATHUB_REMOTE_TITLE:-HardenedStacks Flathub}
+      - FLATHUB_REMOTE_HOMEPAGE=${FLATHUB_REMOTE_HOMEPAGE:-https://flathub.org/}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - flathub_repo:/data/repo
+      - flathub_config:/config
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /run:size=16m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  flathub_repo:
+  flathub_config:
