@@ -12,6 +12,7 @@ Images are published to ghcr.io/sudo-ivan/hardened-stacks.
 | MediaWiki | mediawiki/ | 8080 | ghcr.io/sudo-ivan/hardened-stacks/mediawiki |
 | Copyparty | copyparty/ | 3923 | ghcr.io/sudo-ivan/hardened-stacks/copyparty |
 | Forgejo | forgejo/ | 3000 | ghcr.io/sudo-ivan/hardened-stacks/forgejo |
+| cgit | cgit/ | 8080 | ghcr.io/sudo-ivan/hardened-stacks/cgit |
 
 Point your Coolify domain at the service using the port in the table. Coolify handles HTTPS on the public URL.
 
@@ -69,6 +70,8 @@ Git hosting based on [Forgejo](https://forgejo.org/docs/latest/). Uses the offic
 
 **First deploy:** set FORGEJO_DB_PASSWORD locally. Coolify provides SERVICE_PASSWORD_FORGEJODB. Finish setup in the web installer.
 
+**Branding:** set FORGEJO_APP_NAME and optional FORGEJO_APP_SLOGAN for the page title. FORGEJO_LOGO_URL defaults to the HardenedStacks logo (set to `none` for stock Forgejo). Optional FORGEJO_FAVICON_URL, FORGEJO_DEFAULT_THEME (`forgejo-auto`, `forgejo-light`, `forgejo-dark`, …), FORGEJO_THEMES (comma-separated allow-list), and FORGEJO_CUSTOM_CSS_URL (extra stylesheet loaded on every page). Logo and CSS are fetched into the data volume on each start.
+
 **Git SSH:** expose port 2222 separately if you want git@ clone URLs over SSH.
 
 **CAPTCHA:** Forgejo does not support ALTCHA. For self-hosted bot protection on registration, use one of these:
@@ -79,6 +82,32 @@ Git hosting based on [Forgejo](https://forgejo.org/docs/latest/). Uses the offic
     docker compose -f docker-compose.yml -f docker-compose.captcha.yml up -d
 
 **Note:** Forgejo runs as UID 1000. The other stacks use 10001.
+
+---
+
+## cgit
+
+Lightweight Git browsing based on [cgit](https://git.zx2c4.com/cgit/). Built from Alpine as a rootless image with nginx, fcgiwrap, git smart HTTP, and optional Git SSH.
+
+**First deploy:** point Coolify at port 8080. Publish TCP port 2222 for Git SSH (same idea as Forgejo). Repositories live in the cgit_repos volume as bare repos under /repos.
+
+**Add a repo:**
+
+    docker compose exec cgit entrypoint.sh init-repo myproject "My project"
+
+Clone over HTTPS:
+
+    git clone https://your-host/myproject.git
+
+**Git SSH:** set `CGIT_SSH_AUTHORIZED_KEYS` to your public key (one key per line), or write keys into the cfg volume at `ssh/authorized_keys`. Then:
+
+    git clone ssh://git@your-host:2222/myproject.git
+
+Host keys are generated once into the cfg volume. Optional `CGIT_SSH_HOST` overrides the hostname shown in clone URLs. Set `CGIT_SSH_ALLOW_PUSH=true` if you want SSH push (off by default).
+
+**Read-only by default:** browse and clone/fetch are enabled. HTTP push is disabled. Optional site-wide HTTP basic auth with `CGIT_AUTH_USER` and `CGIT_AUTH_PASSWORD`.
+
+**Config:** cgitrc is seeded into the cfg volume on first start. Delete it and redeploy to regenerate defaults. Optional `CGIT_SITE_TITLE` and `CGIT_ROOT_DESC` set the index title and description.
 
 ---
 

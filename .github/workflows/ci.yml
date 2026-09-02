@@ -261,3 +261,81 @@ jobs:
           done
           docker logs "$cid"
           exit 1
+
+  cgit-build:
+    name: cgit image build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: cgit
+          file: cgit/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/sudo-ivan/hardened-stacks/cgit:ci
+          cache-from: type=gha,scope=cgit
+          cache-to: type=gha,mode=max,scope=cgit
+
+      - name: Smoke health endpoint
+        run: |
+          docker volume create cgit-ci-repos
+          docker volume create cgit-ci-cfg
+          keydir=$(mktemp -d)
+          ssh-keygen -t ed25519 -f "$keydir/id_ed25519" -N "" -q
+          pub=$(cat "$keydir/id_ed25519.pub")
+          cid=$(docker run -d -p 127.0.0.1:18081:8080 -p 127.0.0.1:12222:2222 \
+            --read-only \
+            --tmpfs /tmp:rw,size=64m,mode=1777 \
+            --tmpfs /run:rw,size=16m,mode=1777 \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            --user 10001:10001 \
+            -v cgit-ci-repos:/repos \
+            -v cgit-ci-cfg:/cfg \
+            -e CGIT_PUBLIC_URL=http://127.0.0.1:18081 \
+            -e CGIT_SSH_HOST=127.0.0.1 \
+            -e CGIT_SITE_TITLE='ci cgit' \
+            -e CGIT_SSH_AUTHORIZED_KEYS="$pub" \
+            ghcr.io/sudo-ivan/hardened-stacks/cgit:ci)
+          trap 'docker rm -f "$cid"; docker volume rm cgit-ci-repos cgit-ci-cfg; rm -rf "$keydir" /tmp/cgit-ci-clone /tmp/cgit-ci-ssh-clone' EXIT
+          for i in $(seq 1 30); do
+            if wget --spider -q "http://127.0.0.1:18081/health" \
+              && wget -qO- "http://127.0.0.1:18081/" | grep -q 'ci cgit'; then
+              docker exec "$cid" entrypoint.sh init-repo demo "Demo"
+              docker exec "$cid" sh -c '
+                set -eu
+                work=/tmp/demo-src
+                rm -rf "$work"
+                mkdir -p "$work"
+                git -C "$work" init -q
+                git -C "$work" config user.email ci@example.com
+                git -C "$work" config user.name ci
+                echo hello > "$work/README"
+                git -C "$work" add README
+                git -C "$work" commit -q -m init
+                git -C "$work" remote add origin /repos/demo.git
+                git -C "$work" push -q origin HEAD:refs/heads/master
+              '
+              rm -rf /tmp/cgit-ci-clone /tmp/cgit-ci-ssh-clone
+              git clone -q http://127.0.0.1:18081/demo.git /tmp/cgit-ci-clone
+              grep -qx hello /tmp/cgit-ci-clone/README
+              GIT_SSH_COMMAND="ssh -i $keydir/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 12222" \
+                git clone -q ssh://git@127.0.0.1:12222/demo.git /tmp/cgit-ci-ssh-clone
+              grep -qx hello /tmp/cgit-ci-ssh-clone/README
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$cid"
+          exit 1

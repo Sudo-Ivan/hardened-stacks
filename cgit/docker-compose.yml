@@ -1,0 +1,50 @@
+services:
+  cgit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CGIT_UID: "10001"
+        CGIT_GID: "10001"
+    image: ghcr.io/sudo-ivan/hardened-stacks/cgit:local
+    restart: unless-stopped
+    user: "10001:10001"
+    stop_grace_period: 15s
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:2222:2222"
+    environment:
+      - CGIT_SITE_TITLE=${CGIT_SITE_TITLE:-HardenedStacks Git}
+      - CGIT_ROOT_DESC=${CGIT_ROOT_DESC:-Git repositories}
+      - CGIT_PUBLIC_URL=${CGIT_PUBLIC_URL:-http://127.0.0.1:8080}
+      - CGIT_ENABLE_HTTP_CLONE=${CGIT_ENABLE_HTTP_CLONE:-true}
+      - CGIT_ENABLE_GIT_HTTP=${CGIT_ENABLE_GIT_HTTP:-true}
+      - CGIT_ENABLE_SSH=${CGIT_ENABLE_SSH:-true}
+      - CGIT_SSH_PORT=${CGIT_SSH_PORT:-2222}
+      - CGIT_SSH_HOST=${CGIT_SSH_HOST:-127.0.0.1}
+      - CGIT_SSH_ALLOW_PUSH=${CGIT_SSH_ALLOW_PUSH:-false}
+      - CGIT_SSH_AUTHORIZED_KEYS=${CGIT_SSH_AUTHORIZED_KEYS:-}
+      - CGIT_AUTH_USER=${CGIT_AUTH_USER:-}
+      - CGIT_AUTH_PASSWORD=${CGIT_AUTH_PASSWORD:-}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - cgit_repos:/repos
+      - cgit_cfg:/cfg
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+      - /run:size=16m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  cgit_repos:
+  cgit_cfg:
