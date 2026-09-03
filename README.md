@@ -13,6 +13,7 @@ Images are published to ghcr.io/sudo-ivan/hardened-stacks.
 | Copyparty | copyparty/ | 3923 | ghcr.io/sudo-ivan/hardened-stacks/copyparty |
 | Forgejo | forgejo/ | 3000 | ghcr.io/sudo-ivan/hardened-stacks/forgejo |
 | cgit | cgit/ | 8080 | ghcr.io/sudo-ivan/hardened-stacks/cgit |
+| BugPin | bugpin/ | 7300 | ghcr.io/sudo-ivan/hardened-stacks/bugpin |
 
 Point your Coolify domain at the service using the port in the table. Coolify handles HTTPS on the public URL.
 
@@ -81,7 +82,7 @@ Git hosting based on [Forgejo](https://forgejo.org/docs/latest/). Uses the offic
 
     docker compose -f docker-compose.yml -f docker-compose.captcha.yml up -d
 
-**Note:** Forgejo runs as UID 1000. The other stacks use 10001.
+**Note:** Forgejo and BugPin run as UID 1000. The other stacks use 10001.
 
 ---
 
@@ -108,6 +109,20 @@ Host keys are generated once into the cfg volume. Optional `CGIT_SSH_HOST` overr
 **Read-only by default:** browse and clone/fetch are enabled. HTTP push is disabled. Optional site-wide HTTP basic auth with `CGIT_AUTH_USER` and `CGIT_AUTH_PASSWORD`.
 
 **Config:** cgitrc is seeded into the cfg volume on first start. Delete it and redeploy to regenerate defaults. Optional `CGIT_SITE_TITLE` and `CGIT_ROOT_DESC` set the index title and description.
+
+---
+
+## BugPin
+
+Visual bug reporting based on [BugPin](https://github.com/aranticlabs/bugpin). Wraps the official image as a rootless container with a read-only rootfs.
+
+**First deploy:** log in with `admin@example.com` / `changeme123`, then change the password under Users. Set the public App URL under Settings, General (use your Coolify domain). Enable Enforce HTTPS under Security once the reverse proxy sets `X-Forwarded-Proto`.
+
+**Widget:** create a project, copy the API key, and embed the widget script from your BugPin host. Restrict allowed domains per project for production.
+
+**Data:** SQLite, session secret, screenshots, and branding live in the bugpin_data volume under `/data`.
+
+**Note:** BugPin runs as UID 1000 (same as Forgejo). The other stacks use 10001.
 
 ---
 
