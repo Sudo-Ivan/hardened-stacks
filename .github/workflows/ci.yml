@@ -310,8 +310,8 @@ jobs:
             ghcr.io/sudo-ivan/hardened-stacks/cgit:ci)
           trap 'docker rm -f "$cid"; docker volume rm cgit-ci-repos cgit-ci-cfg; rm -rf "$keydir" /tmp/cgit-ci-clone /tmp/cgit-ci-ssh-clone' EXIT
           for i in $(seq 1 30); do
-            if wget --spider -q "http://127.0.0.1:18081/health" \
-              && wget -qO- "http://127.0.0.1:18081/" | grep -q 'ci cgit'; then
+            if curl -fsS "http://127.0.0.1:18081/health" >/dev/null \
+              && curl -sS "http://127.0.0.1:18081/" | grep -q 'ci cgit'; then
               docker exec "$cid" entrypoint.sh init-repo demo "Demo"
               docker exec "$cid" sh -c '
                 set -eu
