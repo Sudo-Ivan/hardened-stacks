@@ -1,50 +1,31 @@
 hardened-stacks-spam-protection:
   admin:
     settings:
-      new_user_post_delay_enabled_label: New account posting delay
-      new_user_post_delay_enabled_help: When enabled, new members must wait after registering before they can post or start discussions.
-      new_user_post_delay_label: New account wait time (seconds)
-      new_user_post_delay_help: How long after registration before a new member can post. 3600 is one hour. Only applies when the delay above is enabled.
-      min_post_interval_label: Minimum seconds between posts
-      min_post_interval_help: Light throttle for all members. Set to 0 to disable.
-      new_user_min_post_interval_label: New member post cooldown (seconds)
-      new_user_min_post_interval_help: Stricter cooldown while an account is still considered new.
-      burst_posts_hour_label: New member posts per hour
-      burst_posts_hour_help: Limits rapid-fire posting from new accounts. Set to 0 to disable.
-      duplicate_window_label: Duplicate post window (seconds)
-      duplicate_window_help: Blocks posting the same content again within this window. Set to 0 to disable.
+      enabled_label: Enable AI spam protection
+      enabled_help: Requires an API key below or SPAM_AI_API_KEY in the environment. Works with OpenAI-compatible providers including OpenRouter.
+      api_key_label: API key
+      api_key_help: Saved in Flarum settings. If empty, SPAM_AI_API_KEY from the environment is used.
+      base_url_label: API base URL
+      base_url_help: OpenAI-compatible root ending in /v1. Examples: https://openrouter.ai/api/v1 or https://api.openai.com/v1. If empty, SPAM_AI_BASE_URL or OpenRouter is used.
+      model_label: Model
+      model_help: Provider model id. Examples: openai/gpt-4o-mini (OpenRouter) or gpt-4o-mini (OpenAI). If empty, SPAM_AI_MODEL or openai/gpt-4o-mini is used.
+      monitor_posts_label: Monitor posts and discussions
+      monitor_posts_help: Classify new posts after they are created and apply moderation actions when spam is detected.
+      monitor_new_users_label: Monitor new registrations
+      monitor_new_users_help: Classify new accounts at signup and suspend obvious bot registrations.
       new_user_days_label: New member period (days)
-      new_user_days_help: Accounts younger than this get the stricter checks. Set to 0 to ignore account age.
+      new_user_days_help: Accounts younger than this are flagged as new in AI context. Set to 0 to ignore age.
       new_user_post_count_label: New member post count
-      new_user_post_count_help: Members with fewer posts than this get the stricter checks. Set to 0 to ignore post count.
-      min_links_for_context_check_label: Links before context check
-      min_links_for_context_check_help: New members must include real text once a post has at least this many links. Set to 0 to disable.
-      min_non_link_chars_label: Minimum non-link text (new members)
-      min_non_link_chars_help: Required amount of text that is not a URL when the context check applies.
-      max_links_label: Hard link cap (optional)
-      max_links_help: Disabled by default. Preservation posts can include many links. Set above 0 only if you need a hard ceiling for everyone.
-      new_user_max_links_label: Hard link cap for new members (optional)
-      new_user_max_links_help: Disabled by default. Set above 0 only for extreme cases.
-      max_url_ratio_label: URL ratio cap for new members (optional)
-      max_url_ratio_help: Disabled by default. Only applies to longer posts from new members. Set to 0 to disable.
-      url_ratio_min_length_label: URL ratio minimum post length
-      url_ratio_min_length_help: Only used when URL ratio cap is enabled.
-  forum:
-    post:
-      new_user_post_delay: New accounts must wait a little longer before posting. Please try again later.
-      rate_limited: Please wait a little before posting again.
-      burst_limited: You are posting too quickly. Please slow down and try again later.
-      duplicate_content: You already posted this content recently.
-      link_only_post: Please add a short description with your links so others know what you are sharing.
-      too_many_links: This post has too many links.
-      too_many_links_new_user: This post has too many links for a new member account.
-      too_link_heavy: This post is almost entirely links with very little explanation.
-    discussion:
-      new_user_post_delay: New accounts must wait a little longer before starting a discussion. Please try again later.
-      rate_limited: Please wait a little before starting another discussion.
-      burst_limited: You are posting too quickly. Please slow down and try again later.
-      duplicate_content: You already posted this content recently.
-      link_only_post: Please add a short description with your links so others know what you are sharing.
-      too_many_links: This title has too many links.
-      too_many_links_new_user: This title has too many links for a new member account.
-      too_link_heavy: This title is almost entirely links with very little explanation.
+      new_user_post_count_help: Members with fewer posts than this are flagged as new in AI context. Set to 0 to ignore count.
+      min_confidence_label: Minimum confidence (0-100)
+      min_confidence_help: Only take action when the model confidence is at least this high.
+      action_hide_post_label: Allow hiding spam posts
+      action_hide_discussion_label: Allow hiding spam discussions
+      action_lock_discussion_label: Allow locking spam discussions
+      action_lock_discussion_help: Requires the Flarum Lock extension so discussions have an is_locked column.
+      action_suspend_user_label: Allow suspending spam users
+      action_suspend_user_help: Requires the Flarum Suspend extension.
+      suspend_days_label: Suspension length (days)
+      suspend_days_help: How long to suspend a user when the model recommends suspension.
+      fail_open_label: Fail open on AI errors
+      fail_open_help: When enabled, API failures leave content alone. When disabled, failed checks hide the post.

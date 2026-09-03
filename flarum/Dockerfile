@@ -12,10 +12,12 @@ WORKDIR /build
 COPY flarum-ext/altcha/js ./altcha
 COPY flarum-ext/delete-users/js ./delete-users
 COPY flarum-ext/spam-protection/js ./spam-protection
+COPY flarum-ext/maintenance/js ./maintenance
 
 RUN cd altcha && npm ci && npm run build \
     && cd ../delete-users && npm ci && npm run build \
-    && cd ../spam-protection && npm ci && npm run build
+    && cd ../spam-protection && npm ci && npm run build \
+    && cd ../maintenance && npm ci && npm run build
 
 FROM ${GO_IMAGE} AS backup-cli
 
@@ -122,9 +124,11 @@ COPY flarum/docker/install-flarum.php /usr/local/bin/install-flarum.php
 COPY flarum-ext/spam-protection ${FLARUM_HOME}/packages/spam-protection
 COPY flarum-ext/delete-users ${FLARUM_HOME}/packages/delete-users
 COPY flarum-ext/altcha ${FLARUM_HOME}/packages/altcha
+COPY flarum-ext/maintenance ${FLARUM_HOME}/packages/maintenance
 COPY --from=extension-js /build/altcha/dist ${FLARUM_HOME}/packages/altcha/js/dist
 COPY --from=extension-js /build/delete-users/dist ${FLARUM_HOME}/packages/delete-users/js/dist
 COPY --from=extension-js /build/spam-protection/dist ${FLARUM_HOME}/packages/spam-protection/js/dist
+COPY --from=extension-js /build/maintenance/dist ${FLARUM_HOME}/packages/maintenance/js/dist
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
@@ -132,7 +136,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
     && composer config --no-interaction repositories.spam-protection path packages/spam-protection \
     && composer config --no-interaction repositories.delete-users path packages/delete-users \
     && composer config --no-interaction repositories.altcha path packages/altcha \
-    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/delete-users:@dev hardened-stacks/altcha:@dev --no-interaction --no-progress --optimize-autoloader \
+    && composer config --no-interaction repositories.maintenance path packages/maintenance \
+    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/delete-users:@dev hardened-stacks/altcha:@dev hardened-stacks/maintenance:@dev --no-interaction --no-progress --optimize-autoloader \
     && rm -f /usr/local/bin/composer \
     && chown -R flarum:flarum "${FLARUM_HOME}"
 

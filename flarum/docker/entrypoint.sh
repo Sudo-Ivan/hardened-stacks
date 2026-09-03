@@ -151,15 +151,104 @@ install_or_migrate() {
     sync_config
   fi
 
+  php flarum extension:enable flarum-suspend 2>/dev/null || true
+  php flarum extension:enable flarum-lock 2>/dev/null || true
   php flarum extension:enable hardened-stacks-spam-protection 2>/dev/null || true
   php flarum extension:enable hardened-stacks-delete-users 2>/dev/null || true
   php flarum extension:enable hardened-stacks-altcha 2>/dev/null || true
+  php flarum extension:enable hardened-stacks-maintenance 2>/dev/null || true
   php flarum migrate --force 2>/dev/null || php flarum migrate || true
   php flarum cache:clear || true
 
-  if [ -z "${ALTCHA_HMAC_SECRET:-}" ]; then
-    echo "ALTCHA_HMAC_SECRET is not set. ALTCHA protection and signup widget are disabled until you set it."
+  ensure_altcha_secret
+  ensure_spam_ai_settings
+  ensure_maintenance_mode
+}
+
+ensure_maintenance_mode() {
+  mode="${FLARUM_MAINTENANCE_MODE:-}"
+  if [ -z "${mode}" ]; then
+    echo "FLARUM_MAINTENANCE_MODE unset. Maintenance stays at admin setting (default off)."
+    return 0
   fi
+
+  FLARUM_MAINTENANCE_MODE="${mode}" \
+  php -r '
+    try {
+      require "/app/vendor/autoload.php";
+      $site = require "/app/site.php";
+      $app = $site->bootApp();
+      $settings = $app->getContainer()->make(Flarum\Settings\SettingsRepositoryInterface::class);
+      $mode = strtolower(trim((string) getenv("FLARUM_MAINTENANCE_MODE")));
+      $normalized = match ($mode) {
+        "banner", "notice", "info" => "banner",
+        "read_only", "readonly", "read-only" => "read_only",
+        "closed", "full", "lockdown", "maintenance" => "closed",
+        default => "off",
+      };
+      $settings->set("hardened-stacks-maintenance.mode", $normalized);
+      fwrite(STDOUT, "Maintenance mode set to {$normalized} from FLARUM_MAINTENANCE_MODE.\n");
+    } catch (Throwable $e) {
+      fwrite(STDOUT, "Maintenance mode will use FLARUM_MAINTENANCE_MODE when Flarum boots.\n");
+    }
+  ' 2>/dev/null || echo "Maintenance mode will use FLARUM_MAINTENANCE_MODE when Flarum boots."
+}
+
+ensure_spam_ai_settings() {
+  if [ -z "${SPAM_AI_API_KEY:-}" ]; then
+    echo "SPAM_AI_API_KEY is not set. Configure AI spam in Admin or set the env var."
+    return 0
+  fi
+
+  SPAM_AI_API_KEY="${SPAM_AI_API_KEY}" \
+  SPAM_AI_BASE_URL="${SPAM_AI_BASE_URL:-https://openrouter.ai/api/v1}" \
+  SPAM_AI_MODEL="${SPAM_AI_MODEL:-openai/gpt-4o-mini}" \
+  php -r '
+    try {
+      require "/app/vendor/autoload.php";
+      $site = require "/app/site.php";
+      $app = $site->bootApp();
+      $settings = $app->getContainer()->make(Flarum\Settings\SettingsRepositoryInterface::class);
+      $settings->set("hardened-stacks-spam-protection.enabled", "1");
+      if ((string) $settings->get("hardened-stacks-spam-protection.api_key", "") === "") {
+        $settings->set("hardened-stacks-spam-protection.api_key", (string) getenv("SPAM_AI_API_KEY"));
+      }
+      if ((string) $settings->get("hardened-stacks-spam-protection.base_url", "") === "") {
+        $settings->set("hardened-stacks-spam-protection.base_url", (string) getenv("SPAM_AI_BASE_URL"));
+      }
+      if ((string) $settings->get("hardened-stacks-spam-protection.model", "") === "") {
+        $settings->set("hardened-stacks-spam-protection.model", (string) getenv("SPAM_AI_MODEL"));
+      }
+      fwrite(STDOUT, "AI spam protection enabled. Admin settings can change key, base URL, and model.\n");
+    } catch (Throwable $e) {
+      fwrite(STDOUT, "AI spam protection will use env or admin settings when Flarum boots.\n");
+    }
+  ' 2>/dev/null || echo "AI spam protection will use env or admin settings when Flarum boots."
+}
+
+ensure_altcha_secret() {
+  if [ -n "${ALTCHA_HMAC_SECRET:-}" ]; then
+    echo "ALTCHA_HMAC_SECRET is set from the environment."
+    return 0
+  fi
+
+  SECRET="$(php -r 'echo bin2hex(random_bytes(32));')" \
+  php -r '
+    try {
+      require "/app/vendor/autoload.php";
+      $site = require "/app/site.php";
+      $app = $site->bootApp();
+      $settings = $app->getContainer()->make(Flarum\Settings\SettingsRepositoryInterface::class);
+      if ((string) $settings->get("hardened-stacks-altcha.hmac_secret", "") === "") {
+        $settings->set("hardened-stacks-altcha.hmac_secret", getenv("SECRET"));
+        fwrite(STDOUT, "ALTCHA HMAC secret auto-configured.\n");
+      } else {
+        fwrite(STDOUT, "ALTCHA HMAC secret already configured in settings.\n");
+      }
+    } catch (Throwable $e) {
+      fwrite(STDOUT, "ALTCHA HMAC secret will be auto-created on first challenge request.\n");
+    }
+  ' 2>/dev/null || echo "ALTCHA HMAC secret will be auto-created on first challenge request."
 }
 
 start_services() {

@@ -27,6 +27,12 @@ services:
       - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
       - PHP_UPLOAD_MAX_SIZE=${PHP_UPLOAD_MAX_SIZE:-16M}
       - ALTCHA_HMAC_SECRET=${ALTCHA_HMAC_SECRET:-}
+      - SPAM_AI_API_KEY=${SPAM_AI_API_KEY:-}
+      - SPAM_AI_BASE_URL=${SPAM_AI_BASE_URL:-https://openrouter.ai/api/v1}
+      - SPAM_AI_MODEL=${SPAM_AI_MODEL:-openai/gpt-4o-mini}
+      - SPAM_AI_HTTP_REFERER=${SPAM_AI_HTTP_REFERER:-}
+      - SPAM_AI_APP_TITLE=${SPAM_AI_APP_TITLE:-HardenedStacks}
+      - FLARUM_MAINTENANCE_MODE=${FLARUM_MAINTENANCE_MODE:-}
       - TZ=${TZ:-UTC}
     volumes:
       - flarum_persist:/persist

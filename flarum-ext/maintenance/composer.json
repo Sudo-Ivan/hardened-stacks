@@ -1,6 +1,6 @@
 {
-    "name": "hardened-stacks/spam-protection",
-    "description": "AI spam protection for Flarum posts and new users",
+    "name": "hardened-stacks/maintenance",
+    "description": "Forum maintenance modes for Flarum",
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
@@ -9,16 +9,16 @@
     },
     "autoload": {
         "psr-4": {
-            "HardenedStacks\\SpamProtection\\": "src/"
+            "HardenedStacks\\Maintenance\\": "src/"
         }
     },
     "extra": {
         "flarum-extension": {
-            "title": "AI Spam Protection",
+            "title": "Maintenance",
             "category": "feature",
             "icon": {
-                "name": "fas fa-shield-alt",
-                "backgroundColor": "#1b5e20",
+                "name": "fas fa-tools",
+                "backgroundColor": "#e65100",
                 "color": "#fff"
             }
         }

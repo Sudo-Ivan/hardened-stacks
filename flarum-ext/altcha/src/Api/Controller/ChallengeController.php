@@ -17,8 +17,8 @@ class ChallengeController implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        if (! $this->altcha->isConfigured()) {
-            return new JsonResponse(['error' => 'ALTCHA is not configured'], 503);
+        if (! $this->altcha->isEnabled()) {
+            return new JsonResponse(['error' => 'ALTCHA is not enabled'], 503);
         }
 
         return new JsonResponse($this->altcha->createChallenge());

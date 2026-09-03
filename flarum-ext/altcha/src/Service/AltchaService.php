@@ -2,12 +2,14 @@
 
 namespace HardenedStacks\Altcha\Service;
 
-use AltchaOrg\Altcha\Algorithm\Pbkdf2;
 use AltchaOrg\Altcha\Altcha;
-use AltchaOrg\Altcha\CreateChallengeOptions;
-use AltchaOrg\Altcha\VerifySolutionOptions;
+use AltchaOrg\Altcha\Challenge;
+use AltchaOrg\Altcha\ChallengeOptions;
+use DateInterval;
+use DateTimeImmutable;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
+use Throwable;
 
 class AltchaService
 {
@@ -20,7 +22,7 @@ class AltchaService
 
     public function isConfigured(): bool
     {
-        return $this->getHmacSecret() !== '';
+        return $this->ensureHmacSecret() !== '';
     }
 
     public function isEnabled(): bool
@@ -45,15 +47,13 @@ class AltchaService
 
     public function createChallenge(): array
     {
-        $pbkdf2 = new Pbkdf2();
-        $challenge = $this->client()->createChallenge(new CreateChallengeOptions(
-            algorithm: $pbkdf2,
-            cost: $this->cost(),
-            counter: random_int(5000, 10000),
-            expiresAt: time() + 600,
+        $maxNumber = $this->maxNumber();
+        $challenge = $this->client()->createChallenge(new ChallengeOptions(
+            maxNumber: $maxNumber,
+            expires: (new DateTimeImmutable())->add(new DateInterval('PT10M')),
         ));
 
-        return $challenge->toArray();
+        return $this->challengeToArray($challenge);
     }
 
     public function verify(?string $payload): bool
@@ -62,35 +62,54 @@ class AltchaService
             return false;
         }
 
-        $result = $this->client()->verifySolution(new VerifySolutionOptions(
-            payload: $payload,
-            algorithm: new Pbkdf2(),
-        ));
-
-        return $result->verified && ! $result->expired;
+        try {
+            return $this->client()->verifySolution($payload, true);
+        } catch (Throwable) {
+            return false;
+        }
     }
 
-    private function cost(): int
+    private function maxNumber(): int
     {
-        $cost = (int) $this->settings->get('hardened-stacks-altcha.cost', 5000);
+        $max = (int) $this->settings->get('hardened-stacks-altcha.cost', 50000);
 
-        return max(1000, min(50000, $cost));
+        return max(1000, min(1000000, $max));
     }
 
-    private function getHmacSecret(): string
+    private function challengeToArray(Challenge $challenge): array
+    {
+        return [
+            'algorithm' => $challenge->algorithm,
+            'challenge' => $challenge->challenge,
+            'maxnumber' => $challenge->maxNumber,
+            'maxNumber' => $challenge->maxNumber,
+            'salt' => $challenge->salt,
+            'signature' => $challenge->signature,
+        ];
+    }
+
+    private function ensureHmacSecret(): string
     {
         $env = getenv('ALTCHA_HMAC_SECRET');
         if (is_string($env) && $env !== '') {
             return $env;
         }
 
-        return (string) $this->settings->get('hardened-stacks-altcha.hmac_secret', '');
+        $secret = (string) $this->settings->get('hardened-stacks-altcha.hmac_secret', '');
+        if ($secret !== '') {
+            return $secret;
+        }
+
+        $secret = bin2hex(random_bytes(32));
+        $this->settings->set('hardened-stacks-altcha.hmac_secret', $secret);
+
+        return $secret;
     }
 
     private function client(): Altcha
     {
         if ($this->client === null) {
-            $this->client = new Altcha(hmacSignatureSecret: $this->getHmacSecret());
+            $this->client = new Altcha($this->ensureHmacSecret());
         }
 
         return $this->client;

@@ -23,7 +23,7 @@ return [
 
     (new Extend\Settings())
         ->default('hardened-stacks-altcha.enabled', '1')
-        ->default('hardened-stacks-altcha.cost', 5000)
+        ->default('hardened-stacks-altcha.cost', 50000)
         ->default('hardened-stacks-altcha.protect_registration', '1')
         ->default('hardened-stacks-altcha.protect_login', '0')
         ->default('hardened-stacks-altcha.protect_password_reset', '1')

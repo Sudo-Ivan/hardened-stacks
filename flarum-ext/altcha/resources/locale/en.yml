@@ -2,11 +2,9 @@ hardened-stacks-altcha:
   admin:
     settings:
       enabled_label: Enable ALTCHA
-      enabled_help: Requires ALTCHA_HMAC_SECRET in the environment or the HMAC secret field below. Without a secret, the widget will not appear on signup.
-      hmac_secret_label: HMAC secret (optional)
-      hmac_secret_help: Leave empty to use ALTCHA_HMAC_SECRET from the environment.
-      cost_label: Proof-of-work cost
-      cost_help: Higher values are slower for bots. Default 5000.
+      enabled_help: HMAC secret is generated automatically on first use. Set ALTCHA_HMAC_SECRET in the environment to override.
+      cost_label: Proof-of-work difficulty (max number)
+      cost_help: Higher values are slower for bots. Default 50000.
       protect_registration_label: Protect registration
       protect_login_label: Protect login
       protect_password_reset_label: Protect password reset

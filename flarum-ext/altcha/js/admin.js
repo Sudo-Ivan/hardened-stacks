@@ -16,15 +16,6 @@ app.initializers.add('hardened-stacks-altcha', () => {
     )
     .registerSetting(
       {
-        setting: 'hardened-stacks-altcha.hmac_secret',
-        type: 'text',
-        label: t('hmac_secret_label'),
-        help: t('hmac_secret_help'),
-      },
-      95
-    )
-    .registerSetting(
-      {
         setting: 'hardened-stacks-altcha.cost',
         type: 'number',
         label: t('cost_label'),

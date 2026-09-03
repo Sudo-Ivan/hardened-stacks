@@ -5,39 +5,68 @@ export default class AltchaState {
     this.payload = '';
     this.status = 'idle';
     this.widget = null;
+    this.mounting = false;
   }
 
   mount(container) {
-    import('altcha').then(() => {
-      const widget = document.createElement('altcha-widget');
-      const apiUrl = app.forum.attribute('apiUrl');
+    if (this.widget || this.mounting || !container) {
+      return;
+    }
 
-      widget.setAttribute('challengeurl', `${apiUrl}/altcha/challenge`);
-      widget.setAttribute('display', 'floating');
-      widget.setAttribute('name', 'altcha');
+    this.mounting = true;
+    this.status = 'loading';
+    m.redraw();
 
-      widget.addEventListener('verified', (event) => {
-        this.payload = event.detail?.payload || widget.value || '';
-        this.status = 'solved';
-        m.redraw();
-      });
+    import('altcha')
+      .then(() => {
+        if (this.widget) {
+          return;
+        }
 
-      widget.addEventListener('statechange', (event) => {
-        const state = event.detail?.state;
-        if (state === 'error') {
+        const widget = document.createElement('altcha-widget');
+        const apiUrl = app.forum.attribute('apiUrl');
+
+        widget.setAttribute('challengeurl', `${apiUrl}/altcha/challenge`);
+        widget.setAttribute('auto', 'onload');
+        widget.setAttribute('name', 'altcha');
+        widget.setAttribute('hidelogo', '1');
+        widget.setAttribute('hidefooter', '1');
+
+        widget.addEventListener('verified', (event) => {
+          this.payload = event.detail?.payload || widget.value || '';
+          this.status = 'solved';
+          m.redraw();
+        });
+
+        widget.addEventListener('statechange', (event) => {
+          const state = event.detail?.state;
+          if (state === 'error' || state === 'expired') {
+            this.status = 'error';
+            m.redraw();
+          } else if (state === 'verifying' || state === 'unverified' || state === 'code') {
+            this.status = 'loading';
+            m.redraw();
+          } else if (state === 'verified') {
+            this.payload = widget.value || this.payload;
+            this.status = 'solved';
+            m.redraw();
+          }
+        });
+
+        widget.addEventListener('error', () => {
           this.status = 'error';
           m.redraw();
-        } else if (state === 'verifying' || state === 'unverified') {
-          this.status = 'loading';
-          m.redraw();
-        }
-      });
+        });
 
-      container.appendChild(widget);
-      this.widget = widget;
-      this.status = 'loading';
-      m.redraw();
-    });
+        container.appendChild(widget);
+        this.widget = widget;
+        this.mounting = false;
+      })
+      .catch(() => {
+        this.mounting = false;
+        this.status = 'error';
+        m.redraw();
+      });
   }
 
   getResponse() {
@@ -52,7 +81,7 @@ export default class AltchaState {
     return this.status;
   }
 
-  waitUntilSettled(timeout = 8000) {
+  waitUntilSettled(timeout = 15000) {
     const start = Date.now();
 
     return new Promise((resolve) => {

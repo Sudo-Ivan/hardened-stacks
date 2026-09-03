@@ -1,0 +1,21 @@
+hardened-stacks-maintenance:
+  admin:
+    settings:
+      mode_label: Maintenance mode
+      mode_help: Choose how restricted the forum should be. Admins are never blocked.
+      mode_options:
+        off: Off
+        banner: Banner only
+        read_only: Read only
+        closed: Closed
+      title_label: Title
+      title_help: Shown on the maintenance page and banner.
+      message_label: Message
+      message_help: Explains why the forum is limited or closed.
+      allow_login_label: Allow login during closed mode
+      allow_login_help: Keep this enabled so admins can sign in while the forum is closed.
+      show_banner_label: Show banner
+      show_banner_help: Shows a notice banner in banner and read-only modes.
+  forum:
+    login: Log in
+    read_only_hint: Browsing is available. Posting and other changes are disabled.
