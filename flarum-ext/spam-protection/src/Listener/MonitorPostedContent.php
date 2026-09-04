@@ -26,7 +26,7 @@ class MonitorPostedContent
         }
 
         $author = $post->user;
-        if (! $author || $author->isAdmin()) {
+        if (! $author) {
             return;
         }
 
@@ -47,6 +47,7 @@ class MonitorPostedContent
                 'username' => $author->username,
                 'joined_at' => $author->joined_at?->toIso8601String(),
                 'comment_count' => (int) $author->comment_count,
+                'is_admin' => $author->isAdmin(),
                 'is_new_user' => $this->monitor->isNewUser($author),
             ],
         ];

@@ -2,6 +2,7 @@
 
 namespace HardenedStacks\SpamProtection;
 
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 final class DeferredRunner
@@ -18,7 +19,16 @@ final class DeferredRunner
 
             try {
                 $callback();
-            } catch (Throwable) {
+            } catch (Throwable $e) {
+                try {
+                    /** @var LoggerInterface $logger */
+                    $logger = resolve(LoggerInterface::class);
+                    $logger->error('hardened-stacks-spam-protection: deferred job failed', [
+                        'error' => $e->getMessage(),
+                    ]);
+                } catch (Throwable) {
+                    error_log('hardened-stacks-spam-protection: deferred job failed: '.$e->getMessage());
+                }
             }
         });
     }

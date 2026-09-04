@@ -31,6 +31,10 @@ class AiClient
     public function classify(string $kind, array $context): SpamVerdict
     {
         if (! $this->isEnabled()) {
+            $this->logger->warning('hardened-stacks-spam-protection: classify skipped (disabled or unconfigured)', [
+                'kind' => $kind,
+            ]);
+
             return SpamVerdict::clean();
         }
 
@@ -65,9 +69,19 @@ class AiClient
                 return $this->onFailure('invalid model json');
             }
 
-            return SpamVerdict::fromArray($decoded);
+            $verdict = SpamVerdict::fromArray($decoded);
+            $this->logger->info('hardened-stacks-spam-protection: AI verdict', [
+                'kind' => $kind,
+                'is_spam' => $verdict->isSpam,
+                'confidence' => $verdict->confidence,
+                'actions' => $verdict->actions,
+                'reason' => $verdict->reason,
+            ]);
+
+            return $verdict;
         } catch (Throwable $e) {
             $this->logger->warning('hardened-stacks-spam-protection: AI request failed', [
+                'kind' => $kind,
                 'error' => $e->getMessage(),
             ]);
 
@@ -90,6 +104,7 @@ class AiClient
 You are a forum spam classifier for a game preservation community.
 Decide whether the submitted content or signup looks like spam, scams, SEO abuse, malware links, mass advertising, or bot registration.
 Preservation posts often include many legitimate download or archive links. That alone is not spam.
+Administrators and owners can still post spam. Classify the content itself. Do not treat author is_admin as a reason to mark clean.
 Respond with JSON only using this schema:
 {
   "is_spam": boolean,

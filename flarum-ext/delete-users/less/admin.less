@@ -1,0 +1,48 @@
+.PmgUserSelect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  cursor: pointer;
+
+  &--header {
+    cursor: pointer;
+  }
+
+  &--empty {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.PmgUserSelect-input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  accent-color: var(--primary-color, #e74c3c);
+}
+
+.PmgUserBulkBar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.PmgUserBulkBar-status {
+  font-size: 0.9em;
+  color: var(--muted-color, #667);
+  white-space: nowrap;
+}
+
+.UserListPage-grid [data-column-name='pmgSelect'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+}

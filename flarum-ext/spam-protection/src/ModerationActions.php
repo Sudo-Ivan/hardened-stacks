@@ -24,6 +24,15 @@ class ModerationActions
     public function applyForPost(CommentPost $post, User $author, SpamVerdict $verdict): void
     {
         if (! $verdict->isSpam || $verdict->confidence < $this->minConfidence()) {
+            $this->logger->info('hardened-stacks-spam-protection: post clean or below threshold', [
+                'post_id' => $post->id,
+                'user_id' => $author->id,
+                'is_spam' => $verdict->isSpam,
+                'confidence' => $verdict->confidence,
+                'min_confidence' => $this->minConfidence(),
+                'reason' => $verdict->reason,
+            ]);
+
             return;
         }
 
@@ -45,7 +54,12 @@ class ModerationActions
             }
         }
 
-        if (in_array('suspend_user', $actions, true) && $this->settingEnabled('action_suspend_user')) {
+        // Never suspend administrators even when their content is moderated.
+        if (
+            ! $author->isAdmin()
+            && in_array('suspend_user', $actions, true)
+            && $this->settingEnabled('action_suspend_user')
+        ) {
             $this->suspendUser($author, $reason);
         }
 
