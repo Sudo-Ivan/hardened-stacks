@@ -139,8 +139,6 @@ YandexImages
 Sogou
 Exabot
 facebot
-ia_archiver
-archive.org_bot
 MJ12bot
 AhrefsBot
 AhrefsSiteAudit
