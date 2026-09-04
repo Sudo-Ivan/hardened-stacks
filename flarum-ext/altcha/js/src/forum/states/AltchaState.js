@@ -1,4 +1,5 @@
 import app from 'flarum/forum/app';
+import 'altcha';
 
 export default class AltchaState {
   constructor() {
@@ -17,56 +18,50 @@ export default class AltchaState {
     this.status = 'loading';
     m.redraw();
 
-    import('altcha')
-      .then(() => {
-        if (this.widget) {
-          return;
-        }
+    try {
+      const widget = document.createElement('altcha-widget');
+      const apiUrl = app.forum.attribute('apiUrl');
 
-        const widget = document.createElement('altcha-widget');
-        const apiUrl = app.forum.attribute('apiUrl');
+      widget.setAttribute('challengeurl', `${apiUrl}/altcha/challenge`);
+      widget.setAttribute('auto', 'onload');
+      widget.setAttribute('name', 'altcha');
+      widget.setAttribute('hidelogo', '1');
+      widget.setAttribute('hidefooter', '1');
 
-        widget.setAttribute('challengeurl', `${apiUrl}/altcha/challenge`);
-        widget.setAttribute('auto', 'onload');
-        widget.setAttribute('name', 'altcha');
-        widget.setAttribute('hidelogo', '1');
-        widget.setAttribute('hidefooter', '1');
+      widget.addEventListener('verified', (event) => {
+        this.payload = event.detail?.payload || widget.value || '';
+        this.status = 'solved';
+        m.redraw();
+      });
 
-        widget.addEventListener('verified', (event) => {
-          this.payload = event.detail?.payload || widget.value || '';
-          this.status = 'solved';
-          m.redraw();
-        });
-
-        widget.addEventListener('statechange', (event) => {
-          const state = event.detail?.state;
-          if (state === 'error' || state === 'expired') {
-            this.status = 'error';
-            m.redraw();
-          } else if (state === 'verifying' || state === 'unverified' || state === 'code') {
-            this.status = 'loading';
-            m.redraw();
-          } else if (state === 'verified') {
-            this.payload = widget.value || this.payload;
-            this.status = 'solved';
-            m.redraw();
-          }
-        });
-
-        widget.addEventListener('error', () => {
+      widget.addEventListener('statechange', (event) => {
+        const state = event.detail?.state;
+        if (state === 'error' || state === 'expired') {
           this.status = 'error';
           m.redraw();
-        });
+        } else if (state === 'verifying' || state === 'unverified' || state === 'code') {
+          this.status = 'loading';
+          m.redraw();
+        } else if (state === 'verified') {
+          this.payload = widget.value || this.payload;
+          this.status = 'solved';
+          m.redraw();
+        }
+      });
 
-        container.appendChild(widget);
-        this.widget = widget;
-        this.mounting = false;
-      })
-      .catch(() => {
-        this.mounting = false;
+      widget.addEventListener('error', () => {
         this.status = 'error';
         m.redraw();
       });
+
+      container.appendChild(widget);
+      this.widget = widget;
+      this.mounting = false;
+    } catch (e) {
+      this.mounting = false;
+      this.status = 'error';
+      m.redraw();
+    }
   }
 
   getResponse() {
