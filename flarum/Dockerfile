@@ -13,11 +13,13 @@ COPY flarum-ext/altcha/js ./altcha
 COPY flarum-ext/delete-users/js ./delete-users
 COPY flarum-ext/spam-protection/js ./spam-protection
 COPY flarum-ext/maintenance/js ./maintenance
+COPY flarum-ext/lxmf/js ./lxmf
 
 RUN cd altcha && npm ci && npm run build \
     && cd ../delete-users && npm ci && npm run build \
     && cd ../spam-protection && npm ci && npm run build \
     && cd ../maintenance && npm ci && npm run build \
+    && cd ../lxmf && npm ci && npm run build \
     && find /build -type f -name '*.map' -delete \
     && find /build -type f -name '*.js' -exec sed -i '/sourceMappingURL/d' {} +
 
@@ -127,10 +129,12 @@ COPY flarum-ext/spam-protection ${FLARUM_HOME}/packages/spam-protection
 COPY flarum-ext/delete-users ${FLARUM_HOME}/packages/delete-users
 COPY flarum-ext/altcha ${FLARUM_HOME}/packages/altcha
 COPY flarum-ext/maintenance ${FLARUM_HOME}/packages/maintenance
+COPY flarum-ext/lxmf ${FLARUM_HOME}/packages/lxmf
 COPY --from=extension-js /build/altcha/dist ${FLARUM_HOME}/packages/altcha/js/dist
 COPY --from=extension-js /build/delete-users/dist ${FLARUM_HOME}/packages/delete-users/js/dist
 COPY --from=extension-js /build/spam-protection/dist ${FLARUM_HOME}/packages/spam-protection/js/dist
 COPY --from=extension-js /build/maintenance/dist ${FLARUM_HOME}/packages/maintenance/js/dist
+COPY --from=extension-js /build/lxmf/dist ${FLARUM_HOME}/packages/lxmf/js/dist
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
 RUN find "${FLARUM_HOME}/packages" -type f \( -name '*.map' -o -name '*.js.map' \) -delete \
@@ -142,7 +146,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
     && composer config --no-interaction repositories.delete-users path packages/delete-users \
     && composer config --no-interaction repositories.altcha path packages/altcha \
     && composer config --no-interaction repositories.maintenance path packages/maintenance \
-    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/delete-users:@dev hardened-stacks/altcha:@dev hardened-stacks/maintenance:@dev --no-interaction --no-progress --optimize-autoloader \
+    && composer config --no-interaction repositories.lxmf path packages/lxmf \
+    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/delete-users:@dev hardened-stacks/altcha:@dev hardened-stacks/maintenance:@dev hardened-stacks/lxmf:@dev --no-interaction --no-progress --optimize-autoloader \
     && rm -f /usr/local/bin/composer \
     && chown -R flarum:flarum "${FLARUM_HOME}"
 

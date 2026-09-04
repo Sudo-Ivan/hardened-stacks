@@ -6,6 +6,7 @@
 **/.env
 **/.env.*
 **/bin/
+**/node_modules
 **/*~
 **/*.swp
 .github
