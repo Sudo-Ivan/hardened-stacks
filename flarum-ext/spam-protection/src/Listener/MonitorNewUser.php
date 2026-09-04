@@ -3,9 +3,8 @@
 namespace HardenedStacks\SpamProtection\Listener;
 
 use Flarum\User\Event\Registered;
-use Flarum\User\User;
-use HardenedStacks\SpamProtection\DeferredRunner;
 use HardenedStacks\SpamProtection\SpamMonitor;
+use Throwable;
 
 class MonitorNewUser
 {
@@ -16,41 +15,18 @@ class MonitorNewUser
 
     public function handle(Registered $event): void
     {
-        if (! $this->monitor->shouldMonitorNewUsers()) {
-            return;
-        }
-
-        $user = $event->user;
-        if ($user->isAdmin()) {
-            return;
-        }
-
-        $userId = (int) $user->id;
-        $context = [
-            'username' => (string) $user->username,
-            'email_domain' => $this->emailDomain((string) $user->email),
-            'joined_at' => $user->joined_at?->toIso8601String(),
-        ];
-
-        $monitor = $this->monitor;
-        DeferredRunner::afterResponse(static function () use ($monitor, $userId, $context): void {
-            $user = User::query()->find($userId);
-            if (! $user) {
+        try {
+            if (! $this->monitor->shouldMonitorNewUsers()) {
                 return;
             }
 
-            $verdict = $monitor->classify('new_user', $context);
-            $monitor->actions()->applyForUser($user, $verdict);
-        });
-    }
+            $user = $event->user;
+            if ($user->isAdmin()) {
+                return;
+            }
 
-    private function emailDomain(string $email): string
-    {
-        $parts = explode('@', $email);
-        if (count($parts) < 2) {
-            return '';
+            $this->monitor->reviewUser($user, 'new_user');
+        } catch (Throwable) {
         }
-
-        return strtolower((string) end($parts));
     }
 }

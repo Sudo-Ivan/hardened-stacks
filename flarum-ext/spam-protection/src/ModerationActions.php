@@ -96,7 +96,11 @@ class ModerationActions
             }
         }
 
-        if (in_array('suspend_user', $actions, true) && $this->settingEnabled('action_suspend_user')) {
+        if (
+            ! $author->isAdmin()
+            && in_array('suspend_user', $actions, true)
+            && $this->settingEnabled('action_suspend_user')
+        ) {
             $this->suspendUser($author, $reason);
         }
 
@@ -118,7 +122,11 @@ class ModerationActions
         $actions = $this->resolveActions($verdict->actions);
         $reason = $this->reasonLabel($verdict);
 
-        if (in_array('suspend_user', $actions, true) && $this->settingEnabled('action_suspend_user')) {
+        if (
+            ! $user->isAdmin()
+            && in_array('suspend_user', $actions, true)
+            && $this->settingEnabled('action_suspend_user')
+        ) {
             $this->suspendUser($user, $reason);
         }
 

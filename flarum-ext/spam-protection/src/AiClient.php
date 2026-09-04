@@ -168,8 +168,8 @@ PROMPT;
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_POSTFIELDS => $body,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_CONNECTTIMEOUT => 3,
         ]);
 
         $raw = curl_exec($ch);
@@ -195,7 +195,7 @@ PROMPT;
                 'method' => 'POST',
                 'header' => implode("\r\n", $headers),
                 'content' => $body,
-                'timeout' => 20,
+                'timeout' => 8,
                 'ignore_errors' => true,
             ],
         ]);
