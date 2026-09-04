@@ -116,12 +116,12 @@ log_ip = "hash"
 retention = "30m"
 
 [ui]
-brand = "RavenGuard"
-status_text = "Checking your browser before accessing this site."
+brand = "Forum"
+status_text = "Checking your browser before accessing Forum."
 test_mode = false
 
 [site]
-description = "Application guard for the forum"
+description = "Forum"
 theme_color = "#050505"
 robots = "noindex, nofollow"
 lang = "en"

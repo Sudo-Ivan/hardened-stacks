@@ -32,9 +32,12 @@ Client -> Coolify TLS -> RavenGuard :8080 -> flarum:8080
 Required:
 
 ```bash
-FLARUM_FORUM_TITLE=HardenedStacks Forum
+FLARUM_BASE_URL=https://forum.example.com
+FLARUM_FORUM_TITLE=Forum
 FLARUM_ADMIN_EMAIL=admin@example.com
 ```
+
+`FLARUM_BASE_URL` must be the public HTTPS forum URL. Do not use Coolify's `*.sslip.io` URL or Flarum asset links break (mixed content).
 
 Coolify provides:
 
@@ -49,27 +52,28 @@ Map domains in Coolify:
 | Domain | Service port |
 |--------|--------------|
 | Forum (`https://forum.example.com`) | `ravenguard:8080` |
-| Guard admin (`https://rg-admin.example.com`) | `ravenguard:9090` |
+| Guard admin (`https://waf.example.com`) | `ravenguard:9090` |
 
-Do not publish Flarum `:8080` publicly. `FLARUM_BASE_URL` defaults to `SERVICE_URL_RAVENGUARD_8080`.
+Do not publish Flarum `:8080` publicly.
 
 Optional:
 
 ```bash
-FLARUM_BASE_URL=https://forum.example.com
 ALTCHA_HMAC_SECRET=   # auto-generated if empty
 SPAM_AI_API_KEY=
 SPAM_AI_BASE_URL=https://openrouter.ai/api/v1
 SPAM_AI_MODEL=openai/gpt-4o-mini
 FLARUM_MAINTENANCE_MODE=off   # off | banner | read_only | closed
 RG_UI_BRAND=Forum
+RG_UI_STATUS_TEXT=Checking your browser before accessing Forum.
+RG_SITE_PUBLIC_URL=https://forum.example.com
 RG_CHALLENGE_ENABLED=true
 RG_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 ```
 
-The entrypoint strips `:8080` from public URLs. Set `FLARUM_BASE_URL` if you need a fixed origin.
+The entrypoint rewrites Flarum `config.php` `url` from `FLARUM_BASE_URL` on every start.
 
-RavenGuard admin bootstrap user defaults to `admin`. Change the password after first login.
+RavenGuard keeps its raven logo; challenge branding text comes from `RG_UI_BRAND` (default Forum). Change the RavenGuard admin password after first login.
 
 ### Bundled extensions
 
