@@ -1,6 +1,8 @@
-# RavenGuard in front of Flarum (Coolify / behind reverse proxy).
-# Topology: Client -> Coolify TLS -> RavenGuard :8080 -> flarum:8080
-# Admin panel: Coolify TLS -> RavenGuard :9090
+# RavenGuard WAF in front of Flarum (Coolify / behind reverse proxy).
+# Topology: Client -> Coolify TLS -> ravenguard :8080 -> flarum:8080
+# Hub (separate service): Coolify TLS -> ravenguard-hub :8080
+# Default command is combined `all` with admin disabled.
+# After hub enrollment, switch to: ravenguard proxy -config /config/ravenguard.toml
 
 [listen]
 http = ":8080"
@@ -147,16 +149,21 @@ restrict_net = true
 restrict_scoped = true
 ignore_missing = true
 ro_dirs = ["/config", "/blocklists", "/etc/ssl/certs"]
-rw_dirs = ["/tmp", "/data/admin"]
+rw_dirs = ["/tmp", "/data"]
 
 [sandbox.seccomp]
 deny_action = "errno"
 
+# Admin lives on ravenguard-hub (`hub` mode), not on the public WAF.
 [admin]
-enabled = true
+enabled = false
 listen = ":9090"
 base_path = "/"
 data_dir = "/data/admin"
 bootstrap_user = "admin"
 session_ttl = "12h"
 cookie_secure = "auto"
+
+# Used when command is `proxy` after Proxies UI enrollment.
+[agent]
+data_dir = "/data/proxy"

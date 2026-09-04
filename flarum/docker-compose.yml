@@ -5,20 +5,17 @@ services:
       context: ../ravenguard
       dockerfile: Dockerfile
       args:
-        RAVENGUARD_REF: ${RAVENGUARD_REF:-aed5900faeacdb94fd0c35f4143b20ea4e6d88d4}
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-5288d0b7d2eed26742b665ff478973403d8aae86}
     restart: unless-stopped
     depends_on:
       flarum:
         condition: service_healthy
     expose:
       - "8080"
-      - "9090"
     ports:
       - "127.0.0.1:8080:8080"
-      - "127.0.0.1:9090:9090"
     environment:
       - SERVICE_URL_RAVENGUARD_8080
-      - SERVICE_URL_RAVENGUARD_9090
       - RG_SITE_PUBLIC_URL=${RG_SITE_PUBLIC_URL:-${FLARUM_BASE_URL:-${SERVICE_URL_RAVENGUARD_8080:-http://127.0.0.1:8080}}}
       - RG_TRUST_MODE=behind_proxy
       - RG_TRUSTED_PROXIES=${RG_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,fc00::/7,::1/128}
@@ -30,20 +27,65 @@ services:
       - RG_TLS_MODE=off
       - RG_CHALLENGE_SECRET=${RG_CHALLENGE_SECRET:-${SERVICE_PASSWORD_RAVENGUARD:-rg-local-dev-secret!!}}
       - RG_CHALLENGE_ENABLED=${RG_CHALLENGE_ENABLED:-true}
-      - RG_ADMIN_ENABLED=true
-      - RG_ADMIN_LISTEN=:9090
-      - RG_ADMIN_DATA_DIR=/data/admin
-      - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}
-      - RG_ADMIN_BOOTSTRAP_PASSWORD=${RG_ADMIN_BOOTSTRAP_PASSWORD:-${SERVICE_PASSWORD_RAVENGUARDADMIN:-}}
-      - RG_ADMIN_COOKIE_SECURE=${RG_ADMIN_COOKIE_SECURE:-auto}
+      - RG_ADMIN_ENABLED=false
       - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
       - RG_UI_BRAND=${RG_UI_BRAND:-Forum}
       - RG_UI_STATUS_TEXT=${RG_UI_STATUS_TEXT:-Checking your browser before accessing Forum.}
       - RG_SITE_DESCRIPTION=${RG_SITE_DESCRIPTION:-Forum}
       - RG_LOG_LEVEL=${RG_LOG_LEVEL:-info}
+      - RG_AGENT_DATA_DIR=/data/proxy
+      - RG_AGENT_HUB_URL=${RG_AGENT_HUB_URL:-http://ravenguard-hub:8080}
+      - RG_AGENT_TOKEN=${RG_AGENT_TOKEN:-}
+      - RG_AGENT_HUB_PUBKEY=${RG_AGENT_HUB_PUBKEY:-}
+      - RG_AGENT_NAME=${RG_AGENT_NAME:-flarum-edge}
       - QFEEDS_API_TOKEN=${QFEEDS_API_TOKEN:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-}
+      - TZ=${TZ:-UTC}
+    volumes:
+      # /data covers agent dir and default manual-certs when admin is off
+      - ravenguard_data:/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  ravenguard-hub:
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
+    build:
+      context: ../ravenguard
+      dockerfile: Dockerfile
+      args:
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-5288d0b7d2eed26742b665ff478973403d8aae86}
+    restart: unless-stopped
+    command: ["hub", "-config", "/config/hub.toml"]
+    expose:
+      - "8080"
+    ports:
+      - "127.0.0.1:9090:8080"
+    environment:
+      - RG_ADMIN_LISTEN=:8080
+      - RG_ADMIN_DATA_DIR=/data/admin
+      - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}
+      - RG_ADMIN_BOOTSTRAP_PASSWORD=${RG_ADMIN_BOOTSTRAP_PASSWORD:-${SERVICE_PASSWORD_RAVENGUARDADMIN:-}}
+      - RG_ADMIN_COOKIE_SECURE=${RG_ADMIN_COOKIE_SECURE:-auto}
+      - RG_HUB_PUBLIC_URL=${RG_HUB_PUBLIC_URL:-http://127.0.0.1:9090}
+      - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
+      - RG_LOG_LEVEL=${RG_LOG_LEVEL:-info}
       - TZ=${TZ:-UTC}
     volumes:
       - ravenguard_admin:/data/admin
@@ -60,7 +102,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -160,6 +202,7 @@ services:
 
 volumes:
   ravenguard_admin:
+  ravenguard_data:
   flarum_persist:
   flarum_storage:
   flarum_assets:

@@ -6,15 +6,13 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        RAVENGUARD_REF: ${RAVENGUARD_REF:-aed5900faeacdb94fd0c35f4143b20ea4e6d88d4}
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-5288d0b7d2eed26742b665ff478973403d8aae86}
     image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
     restart: unless-stopped
     expose:
       - "8080"
-      - "9090"
     ports:
       - "127.0.0.1:8080:8080"
-      - "127.0.0.1:9090:9090"
     environment:
       - RG_TRUST_MODE=behind_proxy
       - RG_TRUSTED_PROXIES=${RG_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,fc00::/7,::1/128}
@@ -23,16 +21,14 @@ services:
       - RG_UPSTREAM_HEALTH_PATH=/
       - RG_TLS_MODE=off
       - RG_CHALLENGE_SECRET=${RG_CHALLENGE_SECRET:-rg-local-dev-secret!!}
-      - RG_ADMIN_ENABLED=true
-      - RG_ADMIN_LISTEN=:9090
-      - RG_ADMIN_DATA_DIR=/data/admin
-      - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}
-      - RG_ADMIN_BOOTSTRAP_PASSWORD=${RG_ADMIN_BOOTSTRAP_PASSWORD:-}
+      - RG_ADMIN_ENABLED=false
       - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
       - RG_UI_BRAND=${RG_UI_BRAND:-RavenGuard}
+      - RG_AGENT_DATA_DIR=/data/proxy
       - TZ=${TZ:-UTC}
     volumes:
-      - ravenguard_admin:/data/admin
+      # /data covers agent dir and default manual-certs when admin is off
+      - ravenguard_data:/data
     tmpfs:
       - /tmp:size=64m,mode=1777
     read_only: true
@@ -54,6 +50,49 @@ services:
     depends_on:
       - app
 
+  ravenguard-hub:
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-5288d0b7d2eed26742b665ff478973403d8aae86}
+    restart: unless-stopped
+    command: ["hub", "-config", "/config/hub.toml"]
+    expose:
+      - "8080"
+    ports:
+      - "127.0.0.1:9090:8080"
+    environment:
+      - RG_ADMIN_LISTEN=:8080
+      - RG_ADMIN_DATA_DIR=/data/admin
+      - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}
+      - RG_ADMIN_BOOTSTRAP_PASSWORD=${RG_ADMIN_BOOTSTRAP_PASSWORD:-}
+      - RG_ADMIN_COOKIE_SECURE=${RG_ADMIN_COOKIE_SECURE:-auto}
+      - RG_HUB_PUBLIC_URL=${RG_HUB_PUBLIC_URL:-http://127.0.0.1:9090}
+      - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ravenguard_admin:/data/admin
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   app:
     image: traefik/whoami:v1.10
     expose:
@@ -61,3 +100,4 @@ services:
 
 volumes:
   ravenguard_admin:
+  ravenguard_data:

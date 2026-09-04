@@ -1,0 +1,35 @@
+# RavenGuard hub: admin SPA + agent accept (no public WAF).
+# Command: ravenguard hub -config /config/hub.toml
+# Docs: https://ravenguard.quad4.io/docs/intro
+
+[admin]
+enabled = true
+listen = ":8080"
+base_path = "/"
+data_dir = "/data/admin"
+bootstrap_user = "admin"
+session_ttl = "12h"
+cookie_secure = "auto"
+
+[hub]
+# public_url via RG_HUB_PUBLIC_URL (Coolify waf domain)
+
+[tls]
+mode = "off"
+
+[logging]
+level = "info"
+format = "text"
+
+[sandbox]
+mode = "best_effort"
+
+[sandbox.landlock]
+restrict_net = true
+restrict_scoped = true
+ignore_missing = true
+ro_dirs = ["/config", "/etc/ssl/certs"]
+rw_dirs = ["/tmp", "/data/admin"]
+
+[sandbox.seccomp]
+deny_action = "errno"

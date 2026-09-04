@@ -2,7 +2,8 @@
 
 # Build RavenGuard from upstream source.
 # https://github.com/Quad4-Software/ravenguard
-ARG RAVENGUARD_REF=aed5900faeacdb94fd0c35f4143b20ea4e6d88d4
+# Fleet modes: all (default), hub, proxy — https://ravenguard.quad4.io/docs/intro
+ARG RAVENGUARD_REF=5288d0b7d2eed26742b665ff478973403d8aae86
 
 FROM alpine:3.22 AS src
 ARG RAVENGUARD_REF
@@ -36,14 +37,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/ravengu
 FROM alpine:3.22
 RUN apk add --no-cache ca-certificates tini su-exec \
  && adduser -D -u 65532 -H nonroot \
- && mkdir -p /config /blocklists /data/admin /tmp \
- && chown -R nonroot:nonroot /data/admin
+ && mkdir -p /config /blocklists /data/admin /data/proxy /tmp \
+ && chown -R nonroot:nonroot /data/admin /data/proxy
 COPY --from=build /out/ravenguard /ravenguard
 COPY --chmod=0555 docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/seccomp-ravenguard.json /etc/ravenguard/seccomp.json
 COPY configs/flarum.toml /config/ravenguard.toml
+COPY configs/hub.toml /config/hub.toml
 COPY blocklists /blocklists
-EXPOSE 8080 9090
+EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
   CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]

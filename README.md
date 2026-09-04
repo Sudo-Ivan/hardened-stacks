@@ -6,7 +6,7 @@ Docker stacks for [Coolify](https://coolify.io/). Each service has a local compo
 
 | Service | Folder | Coolify port | Image |
 |---------|--------|--------------|-------|
-| Flarum | `flarum/` | RavenGuard `8080` (forum), `9090` (guard admin) | `ghcr.io/sudo-ivan/hardened-stacks/flarum` + `.../ravenguard` |
+| Flarum | `flarum/` | `ravenguard:8080` (forum), `ravenguard-hub:8080` (WAF admin) | `ghcr.io/sudo-ivan/hardened-stacks/flarum` + `.../ravenguard` |
 | MediaWiki | `mediawiki/` | 8080 | `ghcr.io/sudo-ivan/hardened-stacks/mediawiki` |
 | Copyparty | `copyparty/` | 3923 | `ghcr.io/sudo-ivan/hardened-stacks/copyparty` |
 | Forgejo | `forgejo/` | 3000 | `ghcr.io/sudo-ivan/hardened-stacks/forgejo` |
@@ -20,12 +20,14 @@ Point your Coolify domain at the service port above. Coolify terminates HTTPS on
 
 ## Flarum
 
-Rootless forum image with bundled HardenedStacks extensions. Coolify traffic goes through [RavenGuard](https://github.com/Quad4-Software/ravenguard) in behind-proxy mode:
+Rootless forum image with bundled HardenedStacks extensions. Coolify traffic goes through [RavenGuard](https://github.com/Quad4-Software/ravenguard) in [fleet mode](https://ravenguard.quad4.io/docs/intro) (WAF edge + separate hub):
 
 ```text
-Client -> Coolify TLS -> RavenGuard :8080 -> flarum:8080
-                     -> RavenGuard :9090 (admin panel, separate URL)
+Client -> Coolify TLS -> ravenguard :8080      -> flarum:8080
+Client -> Coolify TLS -> ravenguard-hub :8080  (admin SPA)
 ```
+
+Day one the edge runs as combined `all` with admin disabled so the forum works without enrollment. The hub is a separate Coolify service on port `8080` only (avoids the dual-port warning). After login, enroll the edge from Proxies UI, set `RG_AGENT_*`, and switch the WAF command to `proxy` for live control.
 
 ### First deploy
 
@@ -36,20 +38,20 @@ FLARUM_FORUM_TITLE=Forum
 FLARUM_ADMIN_EMAIL=admin@example.com
 ```
 
-Attach Coolify domains **only** to `ravenguard`:
+Attach Coolify domains like this (each service exposes only `8080`):
 
 | Domain | Service port |
 |--------|--------------|
 | Forum (`https://forum.example.com`) | `ravenguard:8080` |
-| Guard admin (`https://waf.example.com`) | `ravenguard:9090` |
+| Guard admin (`https://waf.example.com`) | `ravenguard-hub:8080` |
 
-Coolify then sets `SERVICE_URL_RAVENGUARD_8080` to the forum HTTPS URL. Flarum has **no** `SERVICE_URL_*` and no public domain. It uses:
+Do **not** attach domains to `flarum`. Coolify sets `SERVICE_URL_RAVENGUARD_8080` (forum) and `SERVICE_URL_RAVENGUARD_HUB_8080` (hub). Flarum uses:
 
 ```bash
 FLARUM_BASE_URL=${FLARUM_BASE_URL:-$SERVICE_URL_RAVENGUARD_8080}
 ```
 
-So asset URLs follow the RavenGuard forum domain. Override `FLARUM_BASE_URL` only if you need a fixed origin. Do not use Coolify `*.sslip.io` URLs.
+Override `FLARUM_BASE_URL` only if you need a fixed origin. Do not use Coolify `*.sslip.io` URLs.
 
 Coolify provides:
 
@@ -57,7 +59,7 @@ Coolify provides:
 - `SERVICE_PASSWORD_FLARUMDB`
 - `SERVICE_PASSWORD_FLARUMROOT`
 - `SERVICE_PASSWORD_RAVENGUARD` (challenge HMAC, min 16 chars)
-- `SERVICE_PASSWORD_RAVENGUARDADMIN` (RavenGuard panel bootstrap password)
+- `SERVICE_PASSWORD_RAVENGUARDADMIN` (hub bootstrap password)
 
 Optional:
 
@@ -76,7 +78,7 @@ RG_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 
 The entrypoint rewrites Flarum `config.php` `url` from `FLARUM_BASE_URL` on every start.
 
-RavenGuard keeps its raven logo; challenge branding text comes from `RG_UI_BRAND` (default Forum). Change the RavenGuard admin password after first login.
+RavenGuard keeps its raven logo; challenge branding text comes from `RG_UI_BRAND` (default Forum). Change the hub admin password after first login.
 
 ### Bundled extensions
 
