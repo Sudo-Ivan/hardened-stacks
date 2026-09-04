@@ -2,7 +2,7 @@
 
 # Build RavenGuard from upstream source.
 # https://github.com/Quad4-Software/ravenguard
-ARG RAVENGUARD_REF=e338903fa97ee9b212745384c9b6322b167ba573
+ARG RAVENGUARD_REF=aed5900faeacdb94fd0c35f4143b20ea4e6d88d4
 
 FROM alpine:3.22 AS src
 ARG RAVENGUARD_REF
@@ -44,5 +44,7 @@ COPY docker/seccomp-ravenguard.json /etc/ravenguard/seccomp.json
 COPY configs/flarum.toml /config/ravenguard.toml
 COPY blocklists /blocklists
 EXPOSE 8080 9090
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+  CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["-config", "/config/ravenguard.toml"]

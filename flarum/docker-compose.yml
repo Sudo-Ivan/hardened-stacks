@@ -5,7 +5,7 @@ services:
       context: ../ravenguard
       dockerfile: Dockerfile
       args:
-        RAVENGUARD_REF: ${RAVENGUARD_REF:-e338903fa97ee9b212745384c9b6322b167ba573}
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-aed5900faeacdb94fd0c35f4143b20ea4e6d88d4}
     restart: unless-stopped
     depends_on:
       flarum:
@@ -60,6 +60,12 @@ services:
       - DAC_OVERRIDE
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   flarum:
     build:
