@@ -17,7 +17,9 @@ COPY flarum-ext/maintenance/js ./maintenance
 RUN cd altcha && npm ci && npm run build \
     && cd ../delete-users && npm ci && npm run build \
     && cd ../spam-protection && npm ci && npm run build \
-    && cd ../maintenance && npm ci && npm run build
+    && cd ../maintenance && npm ci && npm run build \
+    && find /build -type f -name '*.map' -delete \
+    && find /build -type f -name '*.js' -exec sed -i '/sourceMappingURL/d' {} +
 
 FROM ${GO_IMAGE} AS backup-cli
 
