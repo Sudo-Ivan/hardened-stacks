@@ -11,10 +11,10 @@ services:
       - "8080"
       - "9090"
     environment:
+      # Coolify fills these when domains are attached to ravenguard ports.
       - SERVICE_URL_RAVENGUARD_8080
       - SERVICE_URL_RAVENGUARD_9090
-      - FLARUM_BASE_URL=${FLARUM_BASE_URL:?}
-      - RG_SITE_PUBLIC_URL=${RG_SITE_PUBLIC_URL:-${FLARUM_BASE_URL:?}}
+      - RG_SITE_PUBLIC_URL=${RG_SITE_PUBLIC_URL:-${FLARUM_BASE_URL:-${SERVICE_URL_RAVENGUARD_8080:?}}}
       - RG_TRUST_MODE=behind_proxy
       - RG_TRUSTED_PROXIES=${RG_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,fc00::/7,::1/128}
       - RG_REAL_IP_HEADER=${RG_REAL_IP_HEADER:-X-Real-IP}
@@ -61,6 +61,8 @@ services:
       retries: 5
       start_period: 20s
 
+  # Internal only. Do not attach Coolify domains here.
+  # RavenGuard proxies to http://flarum:8080 on the compose network.
   flarum:
     image: ${FLARUM_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/flarum:latest}
     restart: unless-stopped
@@ -69,9 +71,8 @@ services:
       mariadb:
         condition: service_healthy
     environment:
-      - SERVICE_URL_RAVENGUARD_8080
-      - SERVICE_URL_FLARUM_8080
-      - FLARUM_BASE_URL=${FLARUM_BASE_URL:?}
+      # Public URL must match the domain on ravenguard:8080 (not a flarum SERVICE_URL).
+      - FLARUM_BASE_URL=${FLARUM_BASE_URL:-${SERVICE_URL_RAVENGUARD_8080:?}}
       - FLARUM_FORUM_TITLE=${FLARUM_FORUM_TITLE:?}
       - FLARUM_ADMIN_USERNAME=${FLARUM_ADMIN_USERNAME:-admin}
       - FLARUM_ADMIN_PASSWORD=${SERVICE_PASSWORD_FLARUMADMIN:?}

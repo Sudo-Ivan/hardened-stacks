@@ -45,7 +45,6 @@ jobs:
       FLARUM_FORUM_TITLE: ci
       FLARUM_ADMIN_EMAIL: ci@example.com
       SERVICE_URL_RAVENGUARD_8080: http://localhost:8080
-      SERVICE_URL_FLARUM_8080: http://localhost:8080
       SERVICE_PASSWORD_FLARUMADMIN: ci-admin-pass
       SERVICE_PASSWORD_FLARUMDB: ci-db-pass
       SERVICE_PASSWORD_FLARUMROOT: ci-root-pass

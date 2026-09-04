@@ -32,12 +32,24 @@ Client -> Coolify TLS -> RavenGuard :8080 -> flarum:8080
 Required:
 
 ```bash
-FLARUM_BASE_URL=https://forum.example.com
 FLARUM_FORUM_TITLE=Forum
 FLARUM_ADMIN_EMAIL=admin@example.com
 ```
 
-`FLARUM_BASE_URL` must be the public HTTPS forum URL. Do not use Coolify's `*.sslip.io` URL or Flarum asset links break (mixed content).
+Attach Coolify domains **only** to `ravenguard`:
+
+| Domain | Service port |
+|--------|--------------|
+| Forum (`https://forum.example.com`) | `ravenguard:8080` |
+| Guard admin (`https://waf.example.com`) | `ravenguard:9090` |
+
+Coolify then sets `SERVICE_URL_RAVENGUARD_8080` to the forum HTTPS URL. Flarum has **no** `SERVICE_URL_*` and no public domain. It uses:
+
+```bash
+FLARUM_BASE_URL=${FLARUM_BASE_URL:-$SERVICE_URL_RAVENGUARD_8080}
+```
+
+So asset URLs follow the RavenGuard forum domain. Override `FLARUM_BASE_URL` only if you need a fixed origin. Do not use Coolify `*.sslip.io` URLs.
 
 Coolify provides:
 
@@ -47,18 +59,10 @@ Coolify provides:
 - `SERVICE_PASSWORD_RAVENGUARD` (challenge HMAC, min 16 chars)
 - `SERVICE_PASSWORD_RAVENGUARDADMIN` (RavenGuard panel bootstrap password)
 
-Map domains in Coolify:
-
-| Domain | Service port |
-|--------|--------------|
-| Forum (`https://forum.example.com`) | `ravenguard:8080` |
-| Guard admin (`https://waf.example.com`) | `ravenguard:9090` |
-
-Do not publish Flarum `:8080` publicly.
-
 Optional:
 
 ```bash
+FLARUM_BASE_URL=https://forum.example.com
 ALTCHA_HMAC_SECRET=   # auto-generated if empty
 SPAM_AI_API_KEY=
 SPAM_AI_BASE_URL=https://openrouter.ai/api/v1
@@ -66,7 +70,6 @@ SPAM_AI_MODEL=openai/gpt-4o-mini
 FLARUM_MAINTENANCE_MODE=off   # off | banner | read_only | closed
 RG_UI_BRAND=Forum
 RG_UI_STATUS_TEXT=Checking your browser before accessing Forum.
-RG_SITE_PUBLIC_URL=https://forum.example.com
 RG_CHALLENGE_ENABLED=true
 RG_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 ```
