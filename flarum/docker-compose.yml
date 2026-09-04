@@ -1,4 +1,63 @@
 services:
+  ravenguard:
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
+    build:
+      context: ../ravenguard
+      dockerfile: Dockerfile
+      args:
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-e338903fa97ee9b212745384c9b6322b167ba573}
+    restart: unless-stopped
+    depends_on:
+      flarum:
+        condition: service_healthy
+    expose:
+      - "8080"
+      - "9090"
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9090:9090"
+    environment:
+      - SERVICE_URL_RAVENGUARD_8080
+      - SERVICE_URL_RAVENGUARD_9090
+      - RG_SITE_PUBLIC_URL=${RG_SITE_PUBLIC_URL:-${SERVICE_URL_RAVENGUARD_8080:-http://127.0.0.1:8080}}
+      - RG_TRUST_MODE=behind_proxy
+      - RG_TRUSTED_PROXIES=${RG_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,fc00::/7,::1/128}
+      - RG_REAL_IP_HEADER=${RG_REAL_IP_HEADER:-X-Real-IP}
+      - RG_PROTO_HEADER=${RG_PROTO_HEADER:-X-Forwarded-Proto}
+      - RG_UPSTREAM_URL=http://flarum:8080
+      - RG_UPSTREAM_HEALTH_ENABLED=true
+      - RG_UPSTREAM_HEALTH_PATH=/
+      - RG_TLS_MODE=off
+      - RG_CHALLENGE_SECRET=${RG_CHALLENGE_SECRET:-${SERVICE_PASSWORD_RAVENGUARD:-rg-local-dev-secret!!}}
+      - RG_CHALLENGE_ENABLED=${RG_CHALLENGE_ENABLED:-true}
+      - RG_ADMIN_ENABLED=true
+      - RG_ADMIN_LISTEN=:9090
+      - RG_ADMIN_DATA_DIR=/data/admin
+      - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}
+      - RG_ADMIN_BOOTSTRAP_PASSWORD=${RG_ADMIN_BOOTSTRAP_PASSWORD:-${SERVICE_PASSWORD_RAVENGUARDADMIN:-}}
+      - RG_ADMIN_COOKIE_SECURE=${RG_ADMIN_COOKIE_SECURE:-auto}
+      - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
+      - RG_UI_BRAND=${RG_UI_BRAND:-Forum}
+      - RG_LOG_LEVEL=${RG_LOG_LEVEL:-info}
+      - QFEEDS_API_TOKEN=${QFEEDS_API_TOKEN:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ravenguard_admin:/data/admin
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+
   flarum:
     build:
       context: ..
@@ -16,11 +75,10 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
-    expose:
-      - "8080"
     environment:
+      - SERVICE_URL_RAVENGUARD_8080
       - SERVICE_URL_FLARUM_8080
-      - FLARUM_BASE_URL=${FLARUM_BASE_URL:-${SERVICE_URL_FLARUM_8080}}
+      - FLARUM_BASE_URL=${FLARUM_BASE_URL:-${SERVICE_URL_RAVENGUARD_8080:-${SERVICE_URL_FLARUM_8080:-http://127.0.0.1:8080}}}
       - FLARUM_FORUM_TITLE=${FLARUM_FORUM_TITLE:?}
       - FLARUM_ADMIN_USERNAME=${FLARUM_ADMIN_USERNAME:-admin}
       - FLARUM_ADMIN_PASSWORD=${SERVICE_PASSWORD_FLARUMADMIN}
@@ -95,6 +153,7 @@ services:
       start_period: 30s
 
 volumes:
+  ravenguard_admin:
   flarum_persist:
   flarum_storage:
   flarum_assets:

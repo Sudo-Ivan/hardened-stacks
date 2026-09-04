@@ -6,12 +6,13 @@ Docker stacks for [Coolify](https://coolify.io/). Each service has a local compo
 
 | Service | Folder | Coolify port | Image |
 |---------|--------|--------------|-------|
-| Flarum | `flarum/` | 8080 | `ghcr.io/sudo-ivan/hardened-stacks/flarum` |
+| Flarum | `flarum/` | RavenGuard `8080` (forum), `9090` (guard admin) | `ghcr.io/sudo-ivan/hardened-stacks/flarum` + `.../ravenguard` |
 | MediaWiki | `mediawiki/` | 8080 | `ghcr.io/sudo-ivan/hardened-stacks/mediawiki` |
 | Copyparty | `copyparty/` | 3923 | `ghcr.io/sudo-ivan/hardened-stacks/copyparty` |
 | Forgejo | `forgejo/` | 3000 | `ghcr.io/sudo-ivan/hardened-stacks/forgejo` |
 | cgit | `cgit/` | 8080 | `ghcr.io/sudo-ivan/hardened-stacks/cgit` |
 | BugPin | `bugpin/` | 7300 | `ghcr.io/sudo-ivan/hardened-stacks/bugpin` |
+| RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
 
@@ -19,7 +20,12 @@ Point your Coolify domain at the service port above. Coolify terminates HTTPS on
 
 ## Flarum
 
-Rootless forum image with bundled HardenedStacks extensions.
+Rootless forum image with bundled HardenedStacks extensions. Coolify traffic goes through [RavenGuard](https://github.com/Quad4-Software/ravenguard) in behind-proxy mode:
+
+```text
+Client -> Coolify TLS -> RavenGuard :8080 -> flarum:8080
+                     -> RavenGuard :9090 (admin panel, separate URL)
+```
 
 ### First deploy
 
@@ -30,7 +36,22 @@ FLARUM_FORUM_TITLE=HardenedStacks Forum
 FLARUM_ADMIN_EMAIL=admin@example.com
 ```
 
-Coolify provides `SERVICE_PASSWORD_FLARUMADMIN` and `SERVICE_PASSWORD_FLARUMDB`.
+Coolify provides:
+
+- `SERVICE_PASSWORD_FLARUMADMIN`
+- `SERVICE_PASSWORD_FLARUMDB`
+- `SERVICE_PASSWORD_FLARUMROOT`
+- `SERVICE_PASSWORD_RAVENGUARD` (challenge HMAC, min 16 chars)
+- `SERVICE_PASSWORD_RAVENGUARDADMIN` (RavenGuard panel bootstrap password)
+
+Map domains in Coolify:
+
+| Domain | Service port |
+|--------|--------------|
+| Forum (`https://forum.example.com`) | `ravenguard:8080` |
+| Guard admin (`https://rg-admin.example.com`) | `ravenguard:9090` |
+
+Do not publish Flarum `:8080` publicly. `FLARUM_BASE_URL` defaults to `SERVICE_URL_RAVENGUARD_8080`.
 
 Optional:
 
@@ -41,9 +62,14 @@ SPAM_AI_API_KEY=
 SPAM_AI_BASE_URL=https://openrouter.ai/api/v1
 SPAM_AI_MODEL=openai/gpt-4o-mini
 FLARUM_MAINTENANCE_MODE=off   # off | banner | read_only | closed
+RG_UI_BRAND=Forum
+RG_CHALLENGE_ENABLED=true
+RG_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 ```
 
 The entrypoint strips `:8080` from public URLs. Set `FLARUM_BASE_URL` if you need a fixed origin.
+
+RavenGuard admin bootstrap user defaults to `admin`. Change the password after first login.
 
 ### Bundled extensions
 
@@ -86,7 +112,7 @@ Or set the mode under **Admin → Extensions → Maintenance**.
 
 **Delete users** (`hardened-stacks-delete-users`)
 
-Admins can permanently delete accounts from the admin user editor. Content is soft-deleted first.
+Admins can permanently delete accounts from the admin users page (row action and bulk select) or the user editor. Content is soft-deleted first.
 
 ### Backup CLI
 

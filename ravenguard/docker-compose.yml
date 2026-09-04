@@ -1,0 +1,57 @@
+name: ravenguard
+
+services:
+  ravenguard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RAVENGUARD_REF: ${RAVENGUARD_REF:-e338903fa97ee9b212745384c9b6322b167ba573}
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
+    restart: unless-stopped
+    expose:
+      - "8080"
+      - "9090"
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9090:9090"
+    environment:
+      - RG_TRUST_MODE=behind_proxy
+      - RG_TRUSTED_PROXIES=${RG_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,fc00::/7,::1/128}
+      - RG_UPSTREAM_URL=http://app:80
+      - RG_UPSTREAM_HEALTH_ENABLED=true
+      - RG_UPSTREAM_HEALTH_PATH=/
+      - RG_TLS_MODE=off
+      - RG_CHALLENGE_SECRET=${RG_CHALLENGE_SECRET:-rg-local-dev-secret!!}
+      - RG_ADMIN_ENABLED=true
+      - RG_ADMIN_LISTEN=:9090
+      - RG_ADMIN_DATA_DIR=/data/admin
+      - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}
+      - RG_ADMIN_BOOTSTRAP_PASSWORD=${RG_ADMIN_BOOTSTRAP_PASSWORD:-}
+      - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
+      - RG_UI_BRAND=${RG_UI_BRAND:-RavenGuard}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ravenguard_admin:/data/admin
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - app
+
+  app:
+    image: traefik/whoami:v1.10
+    expose:
+      - "80"
+
+volumes:
+  ravenguard_admin:
