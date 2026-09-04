@@ -22,6 +22,8 @@ services:
       - RG_TLS_MODE=off
       - RG_CHALLENGE_SECRET=${RG_CHALLENGE_SECRET:-rg-local-dev-secret!!}
       - RG_ADMIN_ENABLED=false
+      - RG_MODE=${RG_MODE:-all}
+      - RG_CONFIG=/config/ravenguard.toml
       - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
       - RG_UI_BRAND=${RG_UI_BRAND:-RavenGuard}
       - RG_AGENT_DATA_DIR=/data/proxy
@@ -58,12 +60,13 @@ services:
       args:
         RAVENGUARD_REF: ${RAVENGUARD_REF:-5288d0b7d2eed26742b665ff478973403d8aae86}
     restart: unless-stopped
-    command: ["hub", "-config", "/config/hub.toml"]
     expose:
       - "8080"
     ports:
       - "127.0.0.1:9090:8080"
     environment:
+      - RG_MODE=hub
+      - RG_CONFIG=/config/hub.toml
       - RG_ADMIN_LISTEN=:8080
       - RG_ADMIN_DATA_DIR=/data/admin
       - RG_ADMIN_BOOTSTRAP_USER=${RG_ADMIN_BOOTSTRAP_USER:-admin}

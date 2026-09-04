@@ -27,7 +27,17 @@ Client -> Coolify TLS -> ravenguard :8080      -> flarum:8080
 Client -> Coolify TLS -> ravenguard-hub :8080  (admin SPA)
 ```
 
-Day one the edge runs as combined `all` with admin disabled so the forum works without enrollment. The hub is a separate Coolify service on port `8080` only (avoids the dual-port warning). After login, enroll the edge from Proxies UI, set `RG_AGENT_*`, and switch the WAF command to `proxy` for live control.
+Day one the edge runs with `RG_MODE=all` and admin disabled so the forum works without enrollment. The hub is a separate Coolify service on port `8080` only (avoids the dual-port warning). After login, enroll the edge from Proxies UI, then set on the **ravenguard** service:
+
+```bash
+RG_MODE=proxy
+RG_AGENT_HUB_URL=http://ravenguard-hub:8080
+RG_AGENT_TOKEN=...
+RG_AGENT_HUB_PUBKEY=...
+RG_AGENT_NAME=edge-1
+```
+
+Redeploy. No custom Docker command is required (`RG_MODE` / `RG_CONFIG` are enough).
 
 ### First deploy
 
