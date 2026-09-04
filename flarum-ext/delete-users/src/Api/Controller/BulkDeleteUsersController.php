@@ -11,12 +11,14 @@ use HardenedStacks\DeleteUsers\Service\UserDeleter;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class BulkDeleteUsersController implements RequestHandlerInterface
 {
     public function __construct(
-        private UserDeleter $deleter
+        private UserDeleter $deleter,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -33,7 +35,7 @@ class BulkDeleteUsersController implements RequestHandlerInterface
 
         $userIds = array_values(array_unique(array_map('intval', $userIds)));
         $purgeFirst = (bool) Arr::get($attributes, 'purgeFirst', true);
-        $hard = (bool) Arr::get($attributes, 'hard', false);
+        $hard = (bool) Arr::get($attributes, 'hard', true);
 
         $deletedUsers = 0;
         $deletedPosts = 0;
@@ -59,9 +61,15 @@ class BulkDeleteUsersController implements RequestHandlerInterface
                     'reason' => 'User not found.',
                 ];
             } catch (Throwable $e) {
+                $this->logger->error('hardened-stacks-delete-users: bulk delete item failed', [
+                    'user_id' => $userId,
+                    'actor_id' => $actor->id,
+                    'error' => $e->getMessage(),
+                ]);
+
                 $skipped[] = [
                     'id' => $userId,
-                    'reason' => 'Delete failed.',
+                    'reason' => $e->getMessage() !== '' ? $e->getMessage() : 'Delete failed.',
                 ];
             }
         }

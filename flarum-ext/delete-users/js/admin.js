@@ -21,7 +21,7 @@ async function deleteUserRequest(userId) {
       data: {
         attributes: {
           purgeFirst: true,
-          hard: false,
+          hard: true,
         },
       },
     },
@@ -37,7 +37,7 @@ async function bulkDeleteRequest(userIds) {
         attributes: {
           userIds,
           purgeFirst: true,
-          hard: false,
+          hard: true,
         },
       },
     },

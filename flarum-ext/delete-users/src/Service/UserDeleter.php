@@ -11,6 +11,8 @@ use Flarum\User\Exception\PermissionDeniedException;
 use Flarum\User\User;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
+use RuntimeException;
+use Throwable;
 
 class UserDeleter
 {
@@ -30,16 +32,29 @@ class UserDeleter
             throw new PermissionDeniedException('Administrators cannot be deleted.');
         }
 
-        if ($actor->id === $target->id) {
+        if ((int) $actor->id === (int) $target->id) {
             throw new PermissionDeniedException('You cannot delete your own account.');
         }
 
-        $deleted = 0;
-        if ($purgeFirst) {
-            $deleted = $this->purgeAll($actor, $target, $hard);
+        if ((int) $target->id === 1) {
+            throw new PermissionDeniedException('The root admin cannot be deleted.');
         }
 
-        $this->bus->dispatch(new DeleteUser($target->id, $actor, []));
+        $deleted = 0;
+
+        try {
+            $this->db->transaction(function () use ($actor, $target, $purgeFirst, $hard, &$deleted): void {
+                if ($purgeFirst) {
+                    $deleted = $this->purgeAll($actor, $target, $hard);
+                }
+
+                $this->bus->dispatch(new DeleteUser($target->id, $actor, []));
+            });
+        } catch (PermissionDeniedException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw new RuntimeException('Failed to delete user '.$userId.': '.$e->getMessage(), 0, $e);
+        }
 
         return ['deleted' => $deleted, 'userDeleted' => true];
     }
@@ -48,7 +63,11 @@ class UserDeleter
     {
         $postIds = $this->db->table('posts')
             ->where('user_id', $target->id)
-            ->whereNull('deleted_at')
+            ->when(
+                $hard === false && $this->db->getSchemaBuilder()->hasColumn('posts', 'hidden_at'),
+                fn ($query) => $query->whereNull('hidden_at')
+            )
+            ->orderBy('id')
             ->pluck('id')
             ->all();
 
@@ -59,6 +78,7 @@ class UserDeleter
     {
         $postIds = array_values(array_unique(array_map('intval', $postIds)));
         $deleted = 0;
+        $removedDiscussionIds = [];
 
         foreach ($postIds as $postId) {
             if ($postId <= 0) {
@@ -70,8 +90,22 @@ class UserDeleter
                 continue;
             }
 
+            if (
+                $post instanceof CommentPost
+                && (int) $post->number === 1
+                && isset($removedDiscussionIds[(int) $post->discussion_id])
+            ) {
+                continue;
+            }
+
             if ($hard) {
-                $this->hardDeletePost($actor, $post);
+                if ($post instanceof CommentPost && (int) $post->number === 1) {
+                    $discussionId = (int) $post->discussion_id;
+                    $this->bus->dispatch(new DeleteDiscussion($discussionId, $actor, []));
+                    $removedDiscussionIds[$discussionId] = true;
+                } else {
+                    $this->bus->dispatch(new DeletePost($post->id, $actor, []));
+                }
             } else {
                 $this->softDeletePost($actor, $post);
             }
@@ -79,31 +113,27 @@ class UserDeleter
             $deleted++;
         }
 
-        $target->refreshCommentCount();
-        $target->refreshDiscussionCount();
-        $target->save();
+        $target->refresh();
+        if ($target->exists) {
+            $target->refreshCommentCount();
+            $target->refreshDiscussionCount();
+            $target->save();
+        }
 
         return $deleted;
     }
 
     private function softDeletePost(User $actor, Post $post): void
     {
+        if (! $post instanceof CommentPost) {
+            return;
+        }
+
         if ($post->hidden_at) {
             return;
         }
 
         $post->hide($actor);
         $post->save();
-    }
-
-    private function hardDeletePost(User $actor, Post $post): void
-    {
-        if ($post instanceof CommentPost && (int) $post->number === 1) {
-            $this->bus->dispatch(new DeleteDiscussion($post->discussion_id, $actor, []));
-
-            return;
-        }
-
-        $this->bus->dispatch(new DeletePost($post->id, $actor, []));
     }
 }
