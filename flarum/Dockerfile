@@ -131,6 +131,9 @@ COPY --from=extension-js /build/spam-protection/dist ${FLARUM_HOME}/packages/spa
 COPY --from=extension-js /build/maintenance/dist ${FLARUM_HOME}/packages/maintenance/js/dist
 COPY --from=backup-cli /out/flarum-backup /usr/local/bin/flarum-backup
 
+RUN find "${FLARUM_HOME}/packages" -type f \( -name '*.map' -o -name '*.js.map' \) -delete \
+    && find "${FLARUM_HOME}/packages" -type f -name '*.js' -exec sed -i '/sourceMappingURL/d' {} +
+
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && cd "${FLARUM_HOME}" \
     && composer config --no-interaction repositories.spam-protection path packages/spam-protection \

@@ -2,6 +2,7 @@ const webpack = require('webpack');
 const config = require('flarum-webpack-config')();
 
 function forceSingleBundle(cfg) {
+  cfg.devtool = false;
   cfg.optimization = Object.assign({}, cfg.optimization, {
     splitChunks: false,
     runtimeChunk: false,

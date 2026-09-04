@@ -159,10 +159,17 @@ install_or_migrate() {
   php flarum extension:enable hardened-stacks-maintenance 2>/dev/null || true
   php flarum migrate --force 2>/dev/null || php flarum migrate || true
   php flarum cache:clear || true
+  scrub_sourcemaps
 
   ensure_altcha_secret
   ensure_spam_ai_settings
   ensure_maintenance_mode
+}
+
+scrub_sourcemaps() {
+  echo "Removing public JS source maps..."
+  find public/assets -type f -name '*.map' -delete 2>/dev/null || true
+  find public/assets -type f -name '*.js' -exec sed -i '/sourceMappingURL/d' {} + 2>/dev/null || true
 }
 
 ensure_maintenance_mode() {
