@@ -1,7 +1,10 @@
 import app from 'flarum/forum/app';
-import { override } from 'flarum/common/extend';
+import { extend, override } from 'flarum/common/extend';
 import ForumApplication from 'flarum/forum/ForumApplication';
 import Composer from 'flarum/forum/components/Composer';
+import HeaderSecondary from 'flarum/forum/components/HeaderSecondary';
+import SignUpModal from 'flarum/forum/components/SignUpModal';
+import LogInModal from 'flarum/forum/components/LogInModal';
 import MaintenanceBanner from './components/MaintenanceBanner';
 import MaintenancePage from './components/MaintenancePage';
 
@@ -31,6 +34,33 @@ function blocksWritesForViewer() {
   }
 
   return mode() === 'read_only' || mode() === 'closed';
+}
+
+function allowLoginUi() {
+  if (isAdmin() || app.session.user) {
+    return false;
+  }
+
+  if (mode() === 'closed') {
+    return !!app.forum.attribute('hardened-stacksMaintenanceAllowLogin');
+  }
+
+  return true;
+}
+
+function allowSignUpUi() {
+  if (isAdmin()) {
+    return true;
+  }
+
+  return mode() !== 'read_only' && mode() !== 'closed';
+}
+
+function showMaintenanceAlert() {
+  app.alerts.show(
+    { type: 'error' },
+    app.forum.attribute('hardened-stacksMaintenanceMessage')
+  );
 }
 
 function mountBanner() {
@@ -70,13 +100,40 @@ export default function applyMaintenanceUi() {
 
   override(Composer.prototype, 'load', function (original, ...args) {
     if (blocksWritesForViewer()) {
-      app.alerts.show(
-        { type: 'error' },
-        app.forum.attribute('hardened-stacksMaintenanceMessage')
-      );
+      showMaintenanceAlert();
       return;
     }
 
     return original.apply(this, args);
+  });
+
+  extend(HeaderSecondary.prototype, 'items', function (items) {
+    if (!allowSignUpUi()) {
+      items.remove('signUp');
+    }
+
+    if (!allowLoginUi() && !app.session.user) {
+      items.remove('logIn');
+    }
+  });
+
+  override(SignUpModal.prototype, 'oninit', function (original, vnode) {
+    if (!allowSignUpUi()) {
+      showMaintenanceAlert();
+      app.modal.close();
+      return;
+    }
+
+    return original.call(this, vnode);
+  });
+
+  override(LogInModal.prototype, 'oninit', function (original, vnode) {
+    if (mode() === 'closed' && !allowLoginUi() && !isAdmin()) {
+      showMaintenanceAlert();
+      app.modal.close();
+      return;
+    }
+
+    return original.call(this, vnode);
   });
 }

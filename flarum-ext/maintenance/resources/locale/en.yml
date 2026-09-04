@@ -12,10 +12,10 @@ hardened-stacks-maintenance:
       title_help: Shown on the maintenance page and banner.
       message_label: Message
       message_help: Explains why the forum is limited or closed.
-      allow_login_label: Allow login during closed mode
-      allow_login_help: Keep this enabled so admins can sign in while the forum is closed.
+      allow_login_label: Allow admin login during closed mode
+      allow_login_help: When enabled, only administrator accounts can sign in while closed. Signup stays blocked. Read-only still allows normal member login.
       show_banner_label: Show banner
       show_banner_help: Shows a notice banner in banner and read-only modes.
   forum:
     login: Log in
-    read_only_hint: Browsing is available. Posting and other changes are disabled.
+    read_only_hint: Browsing is available. Posting, signup, and other changes are disabled.

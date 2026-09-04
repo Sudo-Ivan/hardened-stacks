@@ -18,12 +18,16 @@ return [
     (new Extend\Middleware('api'))
         ->add(MaintenanceMiddleware::class),
 
+    (new Extend\Middleware('forum'))
+        ->add(MaintenanceMiddleware::class),
+
     (new Extend\ApiSerializer(\Flarum\Api\Serializer\ForumSerializer::class))
         ->attributes(AddMaintenanceAttributes::class),
 
     (new Extend\Event())
         ->listen(\Flarum\Post\Event\Saving::class, BlockWriteOperations::class)
-        ->listen(\Flarum\Discussion\Event\Saving::class, BlockWriteOperations::class),
+        ->listen(\Flarum\Discussion\Event\Saving::class, BlockWriteOperations::class)
+        ->listen(\Flarum\User\Event\Saving::class, BlockWriteOperations::class),
 
     (new Extend\Settings())
         ->default('hardened-stacks-maintenance.mode', 'off')

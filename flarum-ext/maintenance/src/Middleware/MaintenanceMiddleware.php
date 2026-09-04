@@ -3,6 +3,8 @@
 namespace HardenedStacks\Maintenance\Middleware;
 
 use Flarum\Http\RequestUtil;
+use Flarum\User\UserRepository;
+use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
 use HardenedStacks\Maintenance\MaintenanceState;
 use Psr\Http\Message\ResponseInterface;
@@ -13,7 +15,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 class MaintenanceMiddleware implements MiddlewareInterface
 {
     /**
-     * Route names always allowed for guests during maintenance.
+     * API route names always allowed for guests during maintenance.
      *
      * @var list<string>
      */
@@ -22,17 +24,27 @@ class MaintenanceMiddleware implements MiddlewareInterface
     ];
 
     /**
-     * Auth-related routes allowed when login is enabled.
+     * Auth routes allowed in read-only mode for existing members.
      *
      * @var list<string>
      */
-    private const AUTH_ALLOWED = [
+    private const READ_ONLY_AUTH = [
         'token',
         'forgot',
     ];
 
+    /**
+     * Closed-mode auth: admin login only when allow_login is enabled.
+     *
+     * @var list<string>
+     */
+    private const CLOSED_AUTH = [
+        'token',
+    ];
+
     public function __construct(
-        private MaintenanceState $state
+        private MaintenanceState $state,
+        private UserRepository $users
     ) {
     }
 
@@ -48,15 +60,20 @@ class MaintenanceMiddleware implements MiddlewareInterface
         }
 
         $routeName = (string) $request->getAttribute('routeName');
-        if ($this->isAllowedRoute($routeName)) {
+        if ($this->isAllowedRoute($request, $routeName)) {
             return $handler->handle($request);
         }
 
         $method = strtoupper($request->getMethod());
         $isWrite = in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true);
+        $isApi = $this->isApiRequest($request);
 
         if ($this->state->isClosed()) {
-            return $this->denied();
+            if ($isApi || $isWrite) {
+                return $this->denied();
+            }
+
+            return $handler->handle($request);
         }
 
         if ($this->state->isReadOnly() && $isWrite) {
@@ -66,17 +83,48 @@ class MaintenanceMiddleware implements MiddlewareInterface
         return $handler->handle($request);
     }
 
-    private function isAllowedRoute(string $routeName): bool
+    private function isApiRequest(ServerRequestInterface $request): bool
+    {
+        $path = $request->getUri()->getPath();
+
+        return str_contains($path, '/api');
+    }
+
+    private function isAllowedRoute(ServerRequestInterface $request, string $routeName): bool
     {
         if (in_array($routeName, self::ALWAYS_ALLOWED, true)) {
             return true;
         }
 
-        if ($this->state->allowLogin() && in_array($routeName, self::AUTH_ALLOWED, true)) {
+        if ($this->state->isReadOnly() && in_array($routeName, self::READ_ONLY_AUTH, true)) {
             return true;
         }
 
+        if ($this->state->isClosed()
+            && $this->state->allowLogin()
+            && in_array($routeName, self::CLOSED_AUTH, true)
+        ) {
+            return $this->isAdminLoginAttempt($request);
+        }
+
         return false;
+    }
+
+    private function isAdminLoginAttempt(ServerRequestInterface $request): bool
+    {
+        $body = $request->getParsedBody();
+        if (! is_array($body)) {
+            return false;
+        }
+
+        $identification = trim((string) Arr::get($body, 'identification', ''));
+        if ($identification === '') {
+            return false;
+        }
+
+        $user = $this->users->findByIdentification($identification);
+
+        return $user !== null && $user->isAdmin();
     }
 
     private function denied(): ResponseInterface

@@ -3,3 +3,9 @@ hardened-stacks-delete-users:
     delete_button: Delete user
     delete_confirm: Permanently delete {username} and their content? This cannot be undone.
     delete_success: User deleted.
+    bulk_delete_button: "Delete {count} users"
+    bulk_delete_confirm: Permanently delete {count} users and their content? This cannot be undone.
+    bulk_delete_success: "Deleted {count} users."
+    bulk_delete_partial: "Deleted {deleted} users. Skipped {skipped}."
+    permissions:
+      delete_users_label: Delete users

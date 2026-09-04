@@ -5,6 +5,7 @@ namespace HardenedStacks\Maintenance\Listener;
 use Flarum\Discussion\Event\Saving as DiscussionSaving;
 use Flarum\Foundation\ValidationException;
 use Flarum\Post\Event\Saving as PostSaving;
+use Flarum\User\Event\Saving as UserSaving;
 use HardenedStacks\Maintenance\MaintenanceState;
 
 class BlockWriteOperations
@@ -14,7 +15,7 @@ class BlockWriteOperations
     ) {
     }
 
-    public function handle(PostSaving|DiscussionSaving $event): void
+    public function handle(PostSaving|DiscussionSaving|UserSaving $event): void
     {
         if (! $this->state->blocksWrites($event->actor)) {
             return;
