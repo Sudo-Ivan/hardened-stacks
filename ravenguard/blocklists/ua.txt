@@ -11,13 +11,12 @@ dirbuster
 gobuster
 wfuzz
 ffuf
-nmap
+nmap scripting
 nessus
 openvas
 w3af
 acunetix
 appscan
-burpsuite
 havij
 
 # Headless and automation clients
@@ -30,27 +29,15 @@ chromedriver
 Cypress
 WebDriver
 
-# HTTP library scrapers (non-browser)
-python-requests
-python-urllib
-aiohttp
-httpx
+# Dedicated scrapers / crawl frameworks
 scrapy
-libwww-perl
-Go-http-client
-Java/
-okhttp
-Apache-HttpClient
-curl/
-wget/
-libcurl
-node-fetch
-undici
-got/
-axios/
 crawl4ai
 firecrawl
 browser-use
+HTTrack
+heritrix
+nutch
+img2dataset
 
 # OpenAI
 GPTBot
@@ -67,7 +54,7 @@ anthropic-ai
 PerplexityBot
 Perplexity-User
 
-# Google AI (training / agents, not classic Googlebot)
+# Google AI training / agents (not classic Googlebot)
 Google-Extended
 Google-Agent
 Google-CloudVertexBot
@@ -77,7 +64,6 @@ GoogleOther
 # Meta AI training / fetch
 meta-externalagent
 meta-externalfetcher
-FacebookBot
 
 # Apple Intelligence training
 Applebot-Extended
@@ -98,12 +84,12 @@ DuckAssistBot
 Timpibot
 PanguBot
 webzio
+Webz.io
 PetalBot
-SemrushBot-OCOB
-DataForSeoBot
+DeepSeek
+DeepSeekBot
 ChatGPT
 iaskspider
-Webz.io
 ICC-Crawler
 VelenPublicWebCrawler
 Turnitin
@@ -111,17 +97,15 @@ Seekport
 AwarioSmartBot
 AwarioRssBot
 Magpie-Crawler
-Scrapy
 peer39
 Neevabot
-img2dataset
 Kangaroo Bot
 Sidetrade indexer
 FriendlyCrawler
-DeepSeek
-DeepSeekBot
+DataForSeoBot
+SemrushBot-OCOB
 
-# SEO / search / marketing crawlers
+# SEO / search engine crawlers
 Googlebot
 Googlebot-Image
 Googlebot-News
@@ -138,7 +122,8 @@ YandexBot
 YandexImages
 Sogou
 Exabot
-facebot
+ia_archiver
+archive.org_bot
 MJ12bot
 AhrefsBot
 AhrefsSiteAudit
@@ -149,7 +134,7 @@ Screaming Frog
 ScreamingFrogSEOSpider
 SeznamBot
 BLEXBot
-DataXu
+blexbot
 MauiBot
 ZoominfoBot
 LinkpadBot
@@ -158,75 +143,27 @@ SerpstatBot
 SEOkicks
 SERanking
 Barkrowler
-MegaIndex.ru
 SiteAuditBot
 SMTBot
-LinkChecker
 linkdexbot
 WoTBox
 Qwantify
-Twitterbot
-LinkedInBot
-Slackbot
-Discordbot
-TelegramBot
-WhatsApp
-Pinterestbot
-redditbot
-Embedly
-Quora Link Preview
-Outbrain
-Flipboard
-Tumblr
-BitlyBot
-BufferBot
 Applebot
-DuckDuckGo-Favicons-Bot
 Yahoo! Slurp
-slurp
 msnbot
 Teoma
 Gigabot
 ScoutJet
-blexbot
 spbot
 coccocbot
 Mail.RU_Bot
-Yet Another Link Checker
-Wget
-HTTrack
-heritrix
-nutch
+Seobility
+oBot
+Yeti/
+Daumoa
+Ichiro
 panscient
 proximic
-MetaURI
-FlipboardProxy
 PaperLiBot
 TrendsmapResolver
 Nuzzel
-PocketParser
-Yeti
-naver.me
-Yeti/
-Daum
-Ichiro
-line-poker
-Viber
-SkypeUriPreview
-Slack-ImgProxy
-facebookexternalhit
-Facebot
-oBot
-Seobility
-Lighthouse
-PageSpeed
-GTmetrix
-Pingdom
-StatusCake
-UptimeRobot
-Site24x7
-Better Uptime
-Checkly
-DatadogSynthetics
-NewRelicPinger
-CloudFlare-AlwaysOnline
