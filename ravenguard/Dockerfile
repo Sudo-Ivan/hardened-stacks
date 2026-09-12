@@ -12,7 +12,7 @@ RUN apk add --no-cache git ca-certificates \
  && cd /src \
  && git checkout "${RAVENGUARD_REF}"
 
-FROM node:22-bookworm AS admin
+FROM node:26-bookworm AS admin
 WORKDIR /src
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 COPY --from=src /src/package.json /src/pnpm-lock.yaml /src/pnpm-workspace.yaml ./
