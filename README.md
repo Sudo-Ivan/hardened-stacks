@@ -407,7 +407,7 @@ curl -fsS http://127.0.0.1:8088/status
 - GitHub Actions pinned to commit SHAs
 - OCI labels on published images (`org.opencontainers.image.*`)
 - Cosign keyless signing (Sigstore) on every publish
-- Trivy image scan (fail on unfixed CRITICAL) with SARIF upload
+- Trivy image scan (CRITICAL/HIGH reported to code scanning, wrappers may inherit upstream CVEs)
 - CI uses `pull_request` with read-only permissions
 - Publish only runs on `Sudo-Ivan/hardened-stacks` via the `publish` environment
 

@@ -3,6 +3,7 @@
 # Build RavenGuard from upstream source.
 # https://github.com/Quad4-Software/ravenguard
 # Fleet modes: all (default), hub, proxy — https://ravenguard.quad4.io/docs/intro
+# Admin UI is server-rendered Go templates (no Node build).
 ARG RAVENGUARD_REF=1c2ddb11391fac8f09048ddef8a4fcfe386179b8
 
 FROM alpine:3.22 AS src
@@ -12,26 +13,11 @@ RUN apk add --no-cache git ca-certificates \
  && cd /src \
  && git checkout "${RAVENGUARD_REF}"
 
-FROM node:22-bookworm AS admin
-WORKDIR /src
-RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
-COPY --from=src /src/package.json /src/pnpm-lock.yaml /src/pnpm-workspace.yaml ./
-COPY --from=src /src/packages/admin/package.json packages/admin/
-RUN pnpm install --frozen-lockfile --filter @quad4/ravenguard-admin...
-COPY --from=src /src/packages/admin packages/admin
-COPY --from=src /src/Makefile ./
-RUN pnpm admin:build \
- && rm -rf internal/admin/ui/dist \
- && mkdir -p internal/admin/ui/dist \
- && cp -a packages/admin/build/. internal/admin/ui/dist/ \
- && touch internal/admin/ui/dist/.gitkeep
-
 FROM golang:1.26.6-bookworm AS build
 WORKDIR /src
 COPY --from=src /src/go.mod /src/go.sum ./
 RUN go mod download
 COPY --from=src /src/ ./
-COPY --from=admin /src/internal/admin/ui/dist/ ./internal/admin/ui/dist/
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/ravenguard ./cmd/ravenguard
 
 FROM alpine:3.22
