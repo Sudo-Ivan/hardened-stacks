@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${BUGPIN_IMAGE:-ghcr.io/preservemygames/extra/bugpin:local}
+    image: ${BUGPIN_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/bugpin:local}
     restart: unless-stopped
     user: "1000:1000"
     stop_grace_period: 15s

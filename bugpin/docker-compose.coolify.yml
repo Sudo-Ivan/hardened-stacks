@@ -2,7 +2,7 @@ name: bugpin
 
 services:
   bugpin:
-    image: ${BUGPIN_IMAGE:-ghcr.io/preservemygames/extra/bugpin:latest}
+    image: ${BUGPIN_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/bugpin:latest}
     restart: unless-stopped
     user: "1000:1000"
     stop_grace_period: 15s

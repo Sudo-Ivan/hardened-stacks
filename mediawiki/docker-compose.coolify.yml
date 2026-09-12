@@ -2,7 +2,7 @@ name: mediawiki
 
 services:
   mediawiki:
-    image: ${MEDIAWIKI_IMAGE:-ghcr.io/preservemygames/extra/mediawiki:latest}
+    image: ${MEDIAWIKI_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/mediawiki:latest}
     restart: unless-stopped
     user: "10001:10001"
     depends_on:
@@ -17,7 +17,7 @@ services:
       - MEDIAWIKI_ADMIN_USER=${MEDIAWIKI_ADMIN_USER:-admin}
       - MEDIAWIKI_ADMIN_PASSWORD=${SERVICE_PASSWORD_MEDIAWIKIADMIN:?}
       - MEDIAWIKI_ADMIN_EMAIL=${MEDIAWIKI_ADMIN_EMAIL:?}
-      - MEDIAWIKI_LOGO_URL=${MEDIAWIKI_LOGO_URL:-https://preservemygames.org/static/img/logo.svg}
+      - MEDIAWIKI_LOGO_URL=${MEDIAWIKI_LOGO_URL:-none}
       - DB_HOST=mariadb
       - DB_PORT=3306
       - DB_DATABASE=${MYSQL_DATABASE:-mediawiki}

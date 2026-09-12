@@ -2,7 +2,7 @@ name: copyparty
 
 services:
   copyparty:
-    image: ${COPYPARTY_IMAGE:-ghcr.io/preservemygames/extra/copyparty:latest}
+    image: ${COPYPARTY_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/copyparty:latest}
     restart: unless-stopped
     user: "10001:10001"
     stop_grace_period: 15s
@@ -12,7 +12,7 @@ services:
       - SERVICE_URL_COPYPARTY_3923
       - COPYPARTY_ADMIN_USER=${COPYPARTY_ADMIN_USER:-admin}
       - COPYPARTY_ADMIN_PASSWORD=${SERVICE_PASSWORD_COPYPARTYADMIN:?}
-      - COPYPARTY_SITE_NAME=${COPYPARTY_SITE_NAME:-PreserveMyGames Files}
+      - COPYPARTY_SITE_NAME=${COPYPARTY_SITE_NAME:-HardenedStacks Files}
       - COPYPARTY_XFF_SRC=${COPYPARTY_XFF_SRC:-lan}
       - TZ=${TZ:-UTC}
     volumes:

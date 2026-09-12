@@ -66,7 +66,7 @@ jobs:
           file: flarum/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/flarum:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/flarum:ci
           build-args: |
             VERSION=ci
             COMMIT=${{ github.sha }}
@@ -80,18 +80,18 @@ jobs:
           file: ravenguard/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/ravenguard:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/ravenguard:ci
           cache-from: type=gha,scope=ravenguard
           cache-to: type=gha,mode=max,scope=ravenguard
 
       - name: Smoke backup CLI
-        run: docker run --rm --entrypoint flarum-backup ghcr.io/preservemygames/extra/flarum:ci version
+        run: docker run --rm --entrypoint flarum-backup ghcr.io/sudo-ivan/hardened-stacks/flarum:ci version
 
       - name: Smoke forum health endpoint
         working-directory: flarum
         env:
-          FLARUM_IMAGE: ghcr.io/preservemygames/extra/flarum:ci
-          RAVENGUARD_IMAGE: ghcr.io/preservemygames/extra/ravenguard:ci
+          FLARUM_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/flarum:ci
+          RAVENGUARD_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/ravenguard:ci
         run: |
           docker compose up -d --no-build
           trap 'docker compose down -v' EXIT
@@ -143,14 +143,14 @@ jobs:
           file: mediawiki/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/mediawiki:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/mediawiki:ci
           cache-from: type=gha,scope=mediawiki
           cache-to: type=gha,mode=max,scope=mediawiki
 
       - name: Smoke health endpoint
         working-directory: mediawiki
         env:
-          MEDIAWIKI_IMAGE: ghcr.io/preservemygames/extra/mediawiki:ci
+          MEDIAWIKI_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/mediawiki:ci
         run: |
           docker compose up -d --no-build
           trap 'docker compose down -v' EXIT
@@ -186,13 +186,13 @@ jobs:
           file: copyparty/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/copyparty:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/copyparty:ci
           cache-from: type=gha,scope=copyparty
           cache-to: type=gha,mode=max,scope=copyparty
 
       - name: Smoke health endpoint
         run: |
-          cid=$(docker run -d -p 127.0.0.1:13923:3923 -e COPYPARTY_ADMIN_PASSWORD=ci-copyparty-pass ghcr.io/preservemygames/extra/copyparty:ci)
+          cid=$(docker run -d -p 127.0.0.1:13923:3923 -e COPYPARTY_ADMIN_PASSWORD=ci-copyparty-pass ghcr.io/sudo-ivan/hardened-stacks/copyparty:ci)
           trap 'docker rm -f "$cid"' EXIT
           for i in $(seq 1 30); do
             if wget --spider -q "http://127.0.0.1:13923/?reset=/._"; then
@@ -226,14 +226,14 @@ jobs:
           file: forgejo/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/forgejo:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/forgejo:ci
           cache-from: type=gha,scope=forgejo
           cache-to: type=gha,mode=max,scope=forgejo
 
       - name: Smoke health endpoint
         working-directory: forgejo
         env:
-          FORGEJO_IMAGE: ghcr.io/preservemygames/extra/forgejo:ci
+          FORGEJO_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/forgejo:ci
         run: |
           docker compose up -d
           trap 'docker compose down -v' EXIT
@@ -267,7 +267,7 @@ jobs:
           file: flathub-remote/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/flathub-remote:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/flathub-remote:ci
           cache-from: type=gha,scope=flathub-remote
           cache-to: type=gha,mode=max,scope=flathub-remote
 
@@ -276,7 +276,7 @@ jobs:
           cid=$(docker run -d -p 127.0.0.1:18080:8080 \
             -e FLATHUB_INITIAL_SYNC=false \
             -e FLATHUB_SYNC_INTERVAL=0 \
-            ghcr.io/preservemygames/extra/flathub-remote:ci)
+            ghcr.io/sudo-ivan/hardened-stacks/flathub-remote:ci)
           trap 'docker rm -f "$cid"' EXIT
           for i in $(seq 1 30); do
             if wget --spider -q "http://127.0.0.1:18080/health"; then
@@ -308,7 +308,7 @@ jobs:
           file: cgit/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/cgit:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/cgit:ci
           cache-from: type=gha,scope=cgit
           cache-to: type=gha,mode=max,scope=cgit
 
@@ -332,7 +332,7 @@ jobs:
             -e CGIT_SSH_HOST=127.0.0.1 \
             -e CGIT_SITE_TITLE='ci cgit' \
             -e CGIT_SSH_AUTHORIZED_KEYS="$pub" \
-            ghcr.io/preservemygames/extra/cgit:ci)
+            ghcr.io/sudo-ivan/hardened-stacks/cgit:ci)
           trap 'docker rm -f "$cid"; docker volume rm cgit-ci-repos cgit-ci-cfg; rm -rf "$keydir" /tmp/cgit-ci-clone /tmp/cgit-ci-ssh-clone' EXIT
           for i in $(seq 1 30); do
             if curl -fsS "http://127.0.0.1:18081/health" >/dev/null \
@@ -386,14 +386,14 @@ jobs:
           file: bugpin/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/bugpin:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/bugpin:ci
           cache-from: type=gha,scope=bugpin
           cache-to: type=gha,mode=max,scope=bugpin
 
       - name: Smoke health endpoint
         working-directory: bugpin
         env:
-          BUGPIN_IMAGE: ghcr.io/preservemygames/extra/bugpin:ci
+          BUGPIN_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/bugpin:ci
         run: |
           docker compose up -d --no-build
           trap 'docker compose down -v' EXIT
@@ -402,6 +402,131 @@ jobs:
               exit 0
             fi
             sleep 2
+          done
+          docker compose logs
+          exit 1
+
+  bugsink-build:
+    name: bugsink image build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      BUGSINK_SECRET_KEY: ci-bugsink-secret-key-at-least-fifty-characters-long!!
+      BUGSINK_ADMIN_PASSWORD: ci-admin-pass
+      BUGSINK_DB_PASSWORD: ci-db-pass
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: bugsink
+          file: bugsink/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/sudo-ivan/hardened-stacks/bugsink:ci
+          cache-from: type=gha,scope=bugsink
+          cache-to: type=gha,mode=max,scope=bugsink
+
+      - name: Smoke health endpoint
+        working-directory: bugsink
+        env:
+          BUGSINK_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/bugsink:ci
+        run: |
+          docker compose up -d --no-build
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:8000/health/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
+  kaneo-build:
+    name: kaneo image build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      KANEO_AUTH_SECRET: ci-kaneo-auth-secret-32chars-xxxxxx
+      KANEO_DB_PASSWORD: ci-db-pass
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: kaneo
+          file: kaneo/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/sudo-ivan/hardened-stacks/kaneo:ci
+          cache-from: type=gha,scope=kaneo
+          cache-to: type=gha,mode=max,scope=kaneo
+
+      - name: Smoke health endpoint
+        working-directory: kaneo
+        env:
+          KANEO_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/kaneo:ci
+        run: |
+          docker compose up -d --no-build
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:5173/api/health | grep -q ok; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
+  oneuptime-smoke:
+    name: oneuptime compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      HOST: localhost
+      HTTP_PROTOCOL: http
+      ONEUPTIME_HTTP_PORT: "8088"
+      ONEUPTIME_SECRET: ci-oneuptime-secret-value-change-me-32
+      ENCRYPTION_SECRET: ci-oneuptime-encryption-secret-32xx
+      REGISTER_PROBE_KEY: ci-register-probe-key-value
+      DATABASE_PASSWORD: ci-oneuptime-db-pass
+      CLICKHOUSE_PASSWORD: ci-oneuptime-ch-pass
+      VALKEY_PASSWORD: ci-oneuptime-valkey-pass
+      GLOBAL_PROBE_1_KEY: ci-probe-1-key-value-xxxx
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke status endpoint
+        working-directory: oneuptime
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8088/status >/dev/null; then
+              exit 0
+            fi
+            sleep 5
           done
           docker compose logs
           exit 1
@@ -427,14 +552,14 @@ jobs:
           file: ravenguard/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/preservemygames/extra/ravenguard:ci
+          tags: ghcr.io/sudo-ivan/hardened-stacks/ravenguard:ci
           cache-from: type=gha,scope=ravenguard
           cache-to: type=gha,mode=max,scope=ravenguard
 
       - name: Smoke health endpoint
         working-directory: ravenguard
         env:
-          RAVENGUARD_IMAGE: ghcr.io/preservemygames/extra/ravenguard:ci
+          RAVENGUARD_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/ravenguard:ci
           RG_CHALLENGE_SECRET: ci-rg-challenge-secret!!
           RG_ADMIN_BOOTSTRAP_PASSWORD: ci-rg-admin-pass
         run: |

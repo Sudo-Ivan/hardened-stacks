@@ -3,7 +3,7 @@
 # Build RavenGuard from upstream source.
 # https://github.com/Quad4-Software/ravenguard
 # Fleet modes: all (default), hub, proxy — https://ravenguard.quad4.io/docs/intro
-ARG RAVENGUARD_REF=5288d0b7d2eed26742b665ff478973403d8aae86
+ARG RAVENGUARD_REF=1c2ddb11391fac8f09048ddef8a4fcfe386179b8
 
 FROM alpine:3.22 AS src
 ARG RAVENGUARD_REF

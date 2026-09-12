@@ -153,11 +153,11 @@ install_or_migrate() {
 
   php flarum extension:enable flarum-suspend 2>/dev/null || true
   php flarum extension:enable flarum-lock 2>/dev/null || true
-  php flarum extension:enable preservemygames-spam-protection 2>/dev/null || true
-  php flarum extension:enable preservemygames-delete-users 2>/dev/null || true
-  php flarum extension:enable preservemygames-altcha 2>/dev/null || true
-  php flarum extension:enable preservemygames-maintenance 2>/dev/null || true
-  php flarum extension:enable preservemygames-lxmf 2>/dev/null || true
+  php flarum extension:enable hardened-stacks-spam-protection 2>/dev/null || true
+  php flarum extension:enable hardened-stacks-delete-users 2>/dev/null || true
+  php flarum extension:enable hardened-stacks-altcha 2>/dev/null || true
+  php flarum extension:enable hardened-stacks-maintenance 2>/dev/null || true
+  php flarum extension:enable hardened-stacks-lxmf 2>/dev/null || true
   php flarum migrate --force 2>/dev/null || php flarum migrate || true
   php flarum cache:clear || true
   scrub_sourcemaps
@@ -194,7 +194,7 @@ ensure_maintenance_mode() {
         "closed", "full", "lockdown", "maintenance" => "closed",
         default => "off",
       };
-      $settings->set("preservemygames-maintenance.mode", $normalized);
+      $settings->set("hardened-stacks-maintenance.mode", $normalized);
       fwrite(STDOUT, "Maintenance mode set to {$normalized} from FLARUM_MAINTENANCE_MODE.\n");
     } catch (Throwable $e) {
       fwrite(STDOUT, "Maintenance mode will use FLARUM_MAINTENANCE_MODE when Flarum boots.\n");
@@ -217,15 +217,15 @@ ensure_spam_ai_settings() {
       $site = require "/app/site.php";
       $app = $site->bootApp();
       $settings = $app->getContainer()->make(Flarum\Settings\SettingsRepositoryInterface::class);
-      $settings->set("preservemygames-spam-protection.enabled", "1");
-      if ((string) $settings->get("preservemygames-spam-protection.api_key", "") === "") {
-        $settings->set("preservemygames-spam-protection.api_key", (string) getenv("SPAM_AI_API_KEY"));
+      $settings->set("hardened-stacks-spam-protection.enabled", "1");
+      if ((string) $settings->get("hardened-stacks-spam-protection.api_key", "") === "") {
+        $settings->set("hardened-stacks-spam-protection.api_key", (string) getenv("SPAM_AI_API_KEY"));
       }
-      if ((string) $settings->get("preservemygames-spam-protection.base_url", "") === "") {
-        $settings->set("preservemygames-spam-protection.base_url", (string) getenv("SPAM_AI_BASE_URL"));
+      if ((string) $settings->get("hardened-stacks-spam-protection.base_url", "") === "") {
+        $settings->set("hardened-stacks-spam-protection.base_url", (string) getenv("SPAM_AI_BASE_URL"));
       }
-      if ((string) $settings->get("preservemygames-spam-protection.model", "") === "") {
-        $settings->set("preservemygames-spam-protection.model", (string) getenv("SPAM_AI_MODEL"));
+      if ((string) $settings->get("hardened-stacks-spam-protection.model", "") === "") {
+        $settings->set("hardened-stacks-spam-protection.model", (string) getenv("SPAM_AI_MODEL"));
       }
       fwrite(STDOUT, "AI spam protection enabled. Admin settings can change key, base URL, and model.\n");
     } catch (Throwable $e) {
@@ -247,8 +247,8 @@ ensure_altcha_secret() {
       $site = require "/app/site.php";
       $app = $site->bootApp();
       $settings = $app->getContainer()->make(Flarum\Settings\SettingsRepositoryInterface::class);
-      if ((string) $settings->get("preservemygames-altcha.hmac_secret", "") === "") {
-        $settings->set("preservemygames-altcha.hmac_secret", getenv("SECRET"));
+      if ((string) $settings->get("hardened-stacks-altcha.hmac_secret", "") === "") {
+        $settings->set("hardened-stacks-altcha.hmac_secret", getenv("SECRET"));
         fwrite(STDOUT, "ALTCHA HMAC secret auto-configured.\n");
       } else {
         fwrite(STDOUT, "ALTCHA HMAC secret already configured in settings.\n");

@@ -2,7 +2,7 @@ name: flathub-remote
 
 services:
   flathub-remote:
-    image: ${FLATHUB_REMOTE_IMAGE:-ghcr.io/preservemygames/extra/flathub-remote:latest}
+    image: ${FLATHUB_REMOTE_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/flathub-remote:latest}
     restart: unless-stopped
     user: "10001:10001"
     expose:
@@ -13,7 +13,7 @@ services:
       - FLATHUB_MIRROR_REFS=${FLATHUB_MIRROR_REFS:-}
       - FLATHUB_SYNC_INTERVAL=${FLATHUB_SYNC_INTERVAL:-86400}
       - FLATHUB_INITIAL_SYNC=${FLATHUB_INITIAL_SYNC:-true}
-      - FLATHUB_REMOTE_TITLE=${FLATHUB_REMOTE_TITLE:-PreserveMyGames Flathub}
+      - FLATHUB_REMOTE_TITLE=${FLATHUB_REMOTE_TITLE:-HardenedStacks Flathub}
       - FLATHUB_REMOTE_HOMEPAGE=${FLATHUB_REMOTE_HOMEPAGE:-https://flathub.org/}
       - TZ=${TZ:-UTC}
     volumes:

@@ -4,7 +4,10 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 	exit;
 }
 
-$logoUrl = getenv( 'MEDIAWIKI_LOGO_URL' ) ?: 'https://preservemygames.org/static/img/logo.svg';
+$logoUrl = getenv( 'MEDIAWIKI_LOGO_URL' ) ?: '';
+if ( $logoUrl === 'none' ) {
+	$logoUrl = '';
+}
 
 $wgLogos = [
 	'icon' => $logoUrl,

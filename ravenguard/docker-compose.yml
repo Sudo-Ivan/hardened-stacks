@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         RAVENGUARD_REF: ${RAVENGUARD_REF:-5288d0b7d2eed26742b665ff478973403d8aae86}
-    image: ${RAVENGUARD_IMAGE:-ghcr.io/preservemygames/extra/ravenguard:local}
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
     restart: unless-stopped
     expose:
       - "8080"
@@ -53,7 +53,7 @@ services:
       - app
 
   ravenguard-hub:
-    image: ${RAVENGUARD_IMAGE:-ghcr.io/preservemygames/extra/ravenguard:local}
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:local}
     build:
       context: .
       dockerfile: Dockerfile

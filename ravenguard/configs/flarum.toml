@@ -118,12 +118,12 @@ log_ip = "hash"
 retention = "30m"
 
 [ui]
-brand = "MeshChatX Forum"
-status_text = "Checking your browser before accessing MeshChatX Forum."
+brand = "Forum"
+status_text = "Checking your browser before accessing Forum."
 test_mode = false
 
 [site]
-description = "MeshChatX Forum"
+description = "Forum"
 theme_color = "#050505"
 robots = "noindex, nofollow"
 lang = "en"

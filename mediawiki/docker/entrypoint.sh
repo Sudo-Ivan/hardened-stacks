@@ -17,7 +17,7 @@ MEDIAWIKI_SITE_SERVER="${MEDIAWIKI_SITE_SERVER:?MEDIAWIKI_SITE_SERVER is require
 MEDIAWIKI_ADMIN_USER="${MEDIAWIKI_ADMIN_USER:-admin}"
 MEDIAWIKI_ADMIN_PASSWORD="${MEDIAWIKI_ADMIN_PASSWORD:?MEDIAWIKI_ADMIN_PASSWORD is required}"
 MEDIAWIKI_ADMIN_EMAIL="${MEDIAWIKI_ADMIN_EMAIL:?MEDIAWIKI_ADMIN_EMAIL is required}"
-MEDIAWIKI_LOGO_URL="${MEDIAWIKI_LOGO_URL:-https://preservemygames.org/static/img/logo.svg}"
+MEDIAWIKI_LOGO_URL="${MEDIAWIKI_LOGO_URL:-none}"
 
 normalize_base_url() {
   url="${1%/}"
@@ -123,7 +123,7 @@ sync_custom_settings() {
 
   if ! grep -q 'custom/CustomSettings.php' "${MEDIAWIKI_PERSIST}/LocalSettings.php"; then
     printf '\nrequire_once "$IP/custom/CustomSettings.php";\n' >> "${MEDIAWIKI_PERSIST}/LocalSettings.php"
-    echo "Enabled PreserveMyGames logo settings."
+    echo "Enabled HardenedStacks logo settings."
   fi
 }
 

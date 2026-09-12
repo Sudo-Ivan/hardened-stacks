@@ -9,11 +9,11 @@ FROM ${NODE_IMAGE} AS extension-js
 
 WORKDIR /build
 
-COPY flarum-ext-altcha/js ./altcha
-COPY flarum-ext-delete-users/js ./delete-users
-COPY flarum-ext-spam-protection/js ./spam-protection
-COPY flarum-ext-maintenance/js ./maintenance
-COPY flarum-ext-lxmf/js ./lxmf
+COPY flarum-ext/altcha/js ./altcha
+COPY flarum-ext/delete-users/js ./delete-users
+COPY flarum-ext/spam-protection/js ./spam-protection
+COPY flarum-ext/maintenance/js ./maintenance
+COPY flarum-ext/lxmf/js ./lxmf
 
 RUN cd altcha && npm ci && npm run build \
     && cd ../delete-users && npm ci && npm run build \
@@ -125,11 +125,11 @@ COPY flarum/docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-flarum.conf
 COPY flarum/docker/nginx.conf /etc/nginx/nginx.conf
 COPY flarum/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY flarum/docker/install-flarum.php /usr/local/bin/install-flarum.php
-COPY flarum-ext-spam-protection ${FLARUM_HOME}/packages/spam-protection
-COPY flarum-ext-delete-users ${FLARUM_HOME}/packages/delete-users
-COPY flarum-ext-altcha ${FLARUM_HOME}/packages/altcha
-COPY flarum-ext-maintenance ${FLARUM_HOME}/packages/maintenance
-COPY flarum-ext-lxmf ${FLARUM_HOME}/packages/lxmf
+COPY flarum-ext/spam-protection ${FLARUM_HOME}/packages/spam-protection
+COPY flarum-ext/delete-users ${FLARUM_HOME}/packages/delete-users
+COPY flarum-ext/altcha ${FLARUM_HOME}/packages/altcha
+COPY flarum-ext/maintenance ${FLARUM_HOME}/packages/maintenance
+COPY flarum-ext/lxmf ${FLARUM_HOME}/packages/lxmf
 COPY --from=extension-js /build/altcha/dist ${FLARUM_HOME}/packages/altcha/js/dist
 COPY --from=extension-js /build/delete-users/dist ${FLARUM_HOME}/packages/delete-users/js/dist
 COPY --from=extension-js /build/spam-protection/dist ${FLARUM_HOME}/packages/spam-protection/js/dist
@@ -147,7 +147,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
     && composer config --no-interaction repositories.altcha path packages/altcha \
     && composer config --no-interaction repositories.maintenance path packages/maintenance \
     && composer config --no-interaction repositories.lxmf path packages/lxmf \
-    && composer require preservemygames/spam-protection:@dev preservemygames/delete-users:@dev preservemygames/altcha:@dev preservemygames/maintenance:@dev preservemygames/lxmf:@dev --no-interaction --no-progress --optimize-autoloader \
+    && composer require hardened-stacks/spam-protection:@dev hardened-stacks/delete-users:@dev hardened-stacks/altcha:@dev hardened-stacks/maintenance:@dev hardened-stacks/lxmf:@dev --no-interaction --no-progress --optimize-autoloader \
     && rm -f /usr/local/bin/composer \
     && chown -R flarum:flarum "${FLARUM_HOME}"
 

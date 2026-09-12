@@ -7,7 +7,7 @@ services:
         COPYPARTY_COMMIT: ${COPYPARTY_COMMIT:-ac4be555f6cceacbbbc6d50e681a64612da90711}
         COPYPARTY_UID: "10001"
         COPYPARTY_GID: "10001"
-    image: ghcr.io/preservemygames/extra/copyparty:local
+    image: ghcr.io/sudo-ivan/hardened-stacks/copyparty:local
     restart: unless-stopped
     user: "10001:10001"
     stop_grace_period: 15s
@@ -16,7 +16,7 @@ services:
     environment:
       - COPYPARTY_ADMIN_USER=${COPYPARTY_ADMIN_USER:-admin}
       - COPYPARTY_ADMIN_PASSWORD=${COPYPARTY_ADMIN_PASSWORD:?}
-      - COPYPARTY_SITE_NAME=${COPYPARTY_SITE_NAME:-PreserveMyGames Files}
+      - COPYPARTY_SITE_NAME=${COPYPARTY_SITE_NAME:-HardenedStacks Files}
       - COPYPARTY_XFF_SRC=${COPYPARTY_XFF_SRC:-lan}
       - TZ=${TZ:-UTC}
     volumes:

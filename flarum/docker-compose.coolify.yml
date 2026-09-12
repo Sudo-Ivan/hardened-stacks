@@ -2,7 +2,7 @@ name: flarum
 
 services:
   ravenguard:
-    image: ${RAVENGUARD_IMAGE:-ghcr.io/preservemygames/extra/ravenguard:latest}
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:latest}
     restart: unless-stopped
     depends_on:
       flarum:
@@ -28,9 +28,9 @@ services:
       - RG_MODE=${RG_MODE:-all}
       - RG_CONFIG=/config/ravenguard.toml
       - RG_SANDBOX_MODE=${RG_SANDBOX_MODE:-best_effort}
-      - RG_UI_BRAND=${RG_UI_BRAND:-MeshChatX Forum}
-      - RG_UI_STATUS_TEXT=${RG_UI_STATUS_TEXT:-Checking your browser before accessing MeshChatX Forum.}
-      - RG_SITE_DESCRIPTION=${RG_SITE_DESCRIPTION:-MeshChatX Forum}
+      - RG_UI_BRAND=${RG_UI_BRAND:-Forum}
+      - RG_UI_STATUS_TEXT=${RG_UI_STATUS_TEXT:-Checking your browser before accessing Forum.}
+      - RG_SITE_DESCRIPTION=${RG_SITE_DESCRIPTION:-Forum}
       - RG_LOG_LEVEL=${RG_LOG_LEVEL:-info}
       - RG_AGENT_DATA_DIR=/data/proxy
       # After Proxies UI enrollment set RG_MODE=proxy plus token and hub pubkey.
@@ -65,7 +65,7 @@ services:
       start_period: 20s
 
   ravenguard-hub:
-    image: ${RAVENGUARD_IMAGE:-ghcr.io/preservemygames/extra/ravenguard:latest}
+    image: ${RAVENGUARD_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/ravenguard:latest}
     restart: unless-stopped
     expose:
       - "8080"
@@ -106,7 +106,7 @@ services:
   # Internal only. Do not attach Coolify domains here.
   # RavenGuard proxies to http://flarum:8080 on the compose network.
   flarum:
-    image: ${FLARUM_IMAGE:-ghcr.io/preservemygames/extra/flarum:latest}
+    image: ${FLARUM_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/flarum:latest}
     restart: unless-stopped
     user: "10001:10001"
     depends_on:
@@ -133,7 +133,7 @@ services:
       - SPAM_AI_BASE_URL=${SPAM_AI_BASE_URL:-https://openrouter.ai/api/v1}
       - SPAM_AI_MODEL=${SPAM_AI_MODEL:-openai/gpt-4o-mini}
       - SPAM_AI_HTTP_REFERER=${SPAM_AI_HTTP_REFERER:-}
-      - SPAM_AI_APP_TITLE=${SPAM_AI_APP_TITLE:-PreserveMyGames}
+      - SPAM_AI_APP_TITLE=${SPAM_AI_APP_TITLE:-Hardened Stacks}
       - FLARUM_MAINTENANCE_MODE=${FLARUM_MAINTENANCE_MODE:-}
       - TZ=${TZ:-UTC}
     volumes:

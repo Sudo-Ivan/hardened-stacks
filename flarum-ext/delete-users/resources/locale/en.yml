@@ -1,0 +1,17 @@
+hardened-stacks-delete-users:
+  admin:
+    delete_button: Delete
+    delete_confirm: Permanently delete {username} and their content? This cannot be undone.
+    select_all: Select all deletable users on this page
+    select_user: "Select {username}"
+    selected_count: "{count} selected"
+    deleting_one: "Deleting {username}..."
+    deleting_many: "Deleting {count} users..."
+    delete_done_one: "Deleted {username}."
+    delete_failed: Delete failed. Check the request and try again.
+    bulk_delete_button: "Delete {count} users"
+    bulk_delete_confirm: Permanently delete {count} users and their content? This cannot be undone.
+    bulk_delete_success: "Deleted {count} users."
+    bulk_delete_partial: "Deleted {deleted} users. Skipped {skipped}."
+    permissions:
+      delete_users_label: Delete users
