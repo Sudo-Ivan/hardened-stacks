@@ -5,7 +5,7 @@
 # Fleet modes: all (default), hub, proxy — https://ravenguard.quad4.io/docs/intro
 ARG RAVENGUARD_REF=1c2ddb11391fac8f09048ddef8a4fcfe386179b8
 
-FROM alpine:3.22 AS src
+FROM alpine:3.24 AS src
 ARG RAVENGUARD_REF
 RUN apk add --no-cache git ca-certificates \
  && git clone https://github.com/Quad4-Software/ravenguard.git /src \
@@ -34,7 +34,7 @@ COPY --from=src /src/ ./
 COPY --from=admin /src/internal/admin/ui/dist/ ./internal/admin/ui/dist/
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/ravenguard ./cmd/ravenguard
 
-FROM alpine:3.22
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates tini su-exec \
  && adduser -D -u 65532 -H nonroot \
  && mkdir -p /config /blocklists /data/admin /data/proxy /tmp \
