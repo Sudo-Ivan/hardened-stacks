@@ -1,6 +1,8 @@
-# HardenedStacks extra
+# Hardened Stacks
 
 Docker stacks for [Coolify](https://coolify.io/). Each service has a local compose file and a Coolify compose file. Images publish to `ghcr.io/sudo-ivan/hardened-stacks`.
+
+Images are digest-pinned where possible, scanned with Trivy, signed with Cosign keyless, and labeled with OCI metadata.
 
 ## Quick reference
 
@@ -12,6 +14,9 @@ Docker stacks for [Coolify](https://coolify.io/). Each service has a local compo
 | Forgejo | `forgejo/` | 3000 | `ghcr.io/sudo-ivan/hardened-stacks/forgejo` |
 | cgit | `cgit/` | 8080 | `ghcr.io/sudo-ivan/hardened-stacks/cgit` |
 | BugPin | `bugpin/` | 7300 | `ghcr.io/sudo-ivan/hardened-stacks/bugpin` |
+| Bugsink | `bugsink/` | 8000 | `ghcr.io/sudo-ivan/hardened-stacks/bugsink` |
+| Kaneo | `kaneo/` | 5173 | `ghcr.io/sudo-ivan/hardened-stacks/kaneo` |
+| OneUptime | `oneuptime/` | `ingress:7849` | upstream `oneuptime/*` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -20,7 +25,7 @@ Point your Coolify domain at the service port above. Coolify terminates HTTPS on
 
 ## Flarum
 
-Rootless forum image with bundled HardenedStacks extensions. Coolify traffic goes through [RavenGuard](https://github.com/Quad4-Software/ravenguard) in [fleet mode](https://ravenguard.quad4.io/docs/intro) (WAF edge + separate hub):
+Rootless forum image with bundled extensions under `flarum-ext/`. Coolify traffic goes through [RavenGuard](https://github.com/Quad4-Software/ravenguard) in [fleet mode](https://ravenguard.quad4.io/docs/intro) (WAF edge + separate hub):
 
 ```text
 Client -> Coolify TLS -> ravenguard :8080      -> flarum:8080
@@ -161,7 +166,7 @@ Coolify also provides `SERVICE_PASSWORD_MEDIAWIKIDB` and `SERVICE_PASSWORD_MEDIA
 Optional logo:
 
 ```bash
-MEDIAWIKI_LOGO_URL=https://hardened-stacks.org/static/img/logo.svg
+MEDIAWIKI_LOGO_URL=none
 ```
 
 `LocalSettings.php` and uploads live in the `mediawiki_persist` volume. Public URL `:8080` is stripped automatically. Override with `MEDIAWIKI_SITE_SERVER` if needed.
@@ -205,9 +210,9 @@ Finish setup in the web installer.
 ### Branding
 
 ```bash
-FORGEJO_APP_NAME=HardenedStacks Git
+FORGEJO_APP_NAME=Hardened Stacks Git
 FORGEJO_APP_SLOGAN=optional subtitle
-FORGEJO_LOGO_URL=https://hardened-stacks.org/static/img/logo.svg
+FORGEJO_LOGO_URL=none
 FORGEJO_FAVICON_URL=
 FORGEJO_DEFAULT_THEME=forgejo-auto
 FORGEJO_THEMES=forgejo-auto,forgejo-light,forgejo-dark
@@ -281,7 +286,7 @@ CGIT_AUTH_PASSWORD=...
 Optional index text:
 
 ```bash
-CGIT_SITE_TITLE=HardenedStacks Git
+CGIT_SITE_TITLE=Hardened Stacks Git
 CGIT_ROOT_DESC=Public repositories
 ```
 
@@ -308,10 +313,101 @@ BugPin runs as UID `1000` (same as Forgejo).
 
 ---
 
+## Bugsink
+
+Rootless wrapper around [Bugsink](https://github.com/bugsink/bugsink) (Sentry-SDK compatible error tracking) with PostgreSQL 17 and a read-only rootfs.
+
+### First deploy
+
+Point Coolify at port `8000`. Coolify provides:
+
+- `SERVICE_PASSWORD_BUGSINKSECRET` (Django `SECRET_KEY`, long random)
+- `SERVICE_PASSWORD_BUGSINKADMIN` (bootstrap admin password)
+- `SERVICE_PASSWORD_BUGSINKDB`
+
+Optional:
+
+```bash
+BUGSINK_ADMIN_EMAIL=admin@example.com
+BUGSINK_BASE_URL=https://errors.example.com   # else SERVICE_URL_BUGSINK_8000
+```
+
+Log in with the admin email and generated password, then create a project and copy the DSN into your Sentry SDKs.
+
+Bugsink runs as UID `14237`.
+
+---
+
+## Kaneo
+
+Rootless wrapper around [Kaneo](https://github.com/usekaneo/kaneo) (self-hosted project management) with PostgreSQL 16.
+
+### First deploy
+
+Point Coolify at port `5173`. Coolify provides:
+
+- `SERVICE_PASSWORD_KANEOAUTH` (`AUTH_SECRET`, use `openssl rand -hex 32`)
+- `SERVICE_PASSWORD_KANEODB`
+
+Optional:
+
+```bash
+KANEO_CLIENT_URL=https://pm.example.com   # else SERVICE_URL_KANEO_5173
+```
+
+Open the URL and create the first workspace account. Object storage (`S3_*`) is optional for uploads.
+
+Kaneo runs as UID `1001`. The image rewrites static assets at start, so the rootfs is not read-only.
+
+---
+
+## OneUptime
+
+Hardened Coolify compose for [OneUptime](https://github.com/OneUptime/oneuptime) using digest-pinned upstream images (app, nginx, probe, postgres, Valkey, ClickHouse). No custom GHCR image.
+
+### First deploy
+
+Point Coolify at `ingress` port `7849`. Set:
+
+```bash
+HOST=status.example.com
+HTTP_PROTOCOL=https
+TRUSTED_PROXY_HOPS=2
+```
+
+Coolify provides:
+
+- `SERVICE_PASSWORD_ONEUPTIMESECRET`
+- `SERVICE_PASSWORD_ONEUPTIMEENCRYPTION`
+- `SERVICE_PASSWORD_ONEUPTIMEDB`
+- `SERVICE_PASSWORD_ONEUPTIMEVALKEY`
+- `SERVICE_PASSWORD_ONEUPTIMECLICKHOUSE`
+- `SERVICE_PASSWORD_ONEUPTIMEPROBE`
+- `SERVICE_PASSWORD_ONEUPTIMEPROBEKEY`
+
+Register the first account in the UI. The bundled probe uses the compose network (`http://ingress:7849`) instead of host networking. Official docs recommend Kubernetes for large production installs.
+
+Local smoke:
+
+```bash
+cd oneuptime
+export HOST=localhost HTTP_PROTOCOL=http ONEUPTIME_HTTP_PORT=8088
+export ONEUPTIME_SECRET ENCRYPTION_SECRET REGISTER_PROBE_KEY DATABASE_PASSWORD
+export CLICKHOUSE_PASSWORD VALKEY_PASSWORD GLOBAL_PROBE_1_KEY
+# set each to a long random value
+docker compose up -d
+curl -fsS http://127.0.0.1:8088/status
+```
+
+---
+
 ## Security
 
-- Base images pinned by digest
+- Base images pinned by digest where possible
 - GitHub Actions pinned to commit SHAs
+- OCI labels on published images (`org.opencontainers.image.*`)
+- Cosign keyless signing (Sigstore) on every publish
+- Trivy image scan (fail on unfixed CRITICAL) with SARIF upload
 - CI uses `pull_request` with read-only permissions
 - Publish only runs on `Sudo-Ivan/hardened-stacks` via the `publish` environment
 

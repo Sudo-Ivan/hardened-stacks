@@ -406,6 +406,131 @@ jobs:
           docker compose logs
           exit 1
 
+  bugsink-build:
+    name: bugsink image build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      BUGSINK_SECRET_KEY: ci-bugsink-secret-key-at-least-fifty-characters-long!!
+      BUGSINK_ADMIN_PASSWORD: ci-admin-pass
+      BUGSINK_DB_PASSWORD: ci-db-pass
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: bugsink
+          file: bugsink/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/sudo-ivan/hardened-stacks/bugsink:ci
+          cache-from: type=gha,scope=bugsink
+          cache-to: type=gha,mode=max,scope=bugsink
+
+      - name: Smoke health endpoint
+        working-directory: bugsink
+        env:
+          BUGSINK_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/bugsink:ci
+        run: |
+          docker compose up -d --no-build
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:8000/health/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
+  kaneo-build:
+    name: kaneo image build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      KANEO_AUTH_SECRET: ci-kaneo-auth-secret-32chars-xxxxxx
+      KANEO_DB_PASSWORD: ci-db-pass
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: kaneo
+          file: kaneo/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/sudo-ivan/hardened-stacks/kaneo:ci
+          cache-from: type=gha,scope=kaneo
+          cache-to: type=gha,mode=max,scope=kaneo
+
+      - name: Smoke health endpoint
+        working-directory: kaneo
+        env:
+          KANEO_IMAGE: ghcr.io/sudo-ivan/hardened-stacks/kaneo:ci
+        run: |
+          docker compose up -d --no-build
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:5173/api/health | grep -q ok; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
+  oneuptime-smoke:
+    name: oneuptime compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      HOST: localhost
+      HTTP_PROTOCOL: http
+      ONEUPTIME_HTTP_PORT: "8088"
+      ONEUPTIME_SECRET: ci-oneuptime-secret-value-change-me-32
+      ENCRYPTION_SECRET: ci-oneuptime-encryption-secret-32xx
+      REGISTER_PROBE_KEY: ci-register-probe-key-value
+      DATABASE_PASSWORD: ci-oneuptime-db-pass
+      CLICKHOUSE_PASSWORD: ci-oneuptime-ch-pass
+      VALKEY_PASSWORD: ci-oneuptime-valkey-pass
+      GLOBAL_PROBE_1_KEY: ci-probe-1-key-value-xxxx
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke status endpoint
+        working-directory: oneuptime
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8088/status >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose logs
+          exit 1
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest

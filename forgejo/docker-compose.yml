@@ -16,9 +16,9 @@ services:
       - USER_UID=1000
       - USER_GID=1000
       - FORGEJO_ROOT_URL=${FORGEJO_ROOT_URL:-http://127.0.0.1:3000}
-      - FORGEJO_APP_NAME=${FORGEJO_APP_NAME:-HardenedStacks Forgejo}
+      - FORGEJO_APP_NAME=${FORGEJO_APP_NAME:-Hardened Stacks Forgejo}
       - FORGEJO_APP_SLOGAN=${FORGEJO_APP_SLOGAN:-}
-      - FORGEJO_LOGO_URL=${FORGEJO_LOGO_URL:-https://hardened-stacks.org/static/img/logo.svg}
+      - FORGEJO_LOGO_URL=${FORGEJO_LOGO_URL:-none}
       - FORGEJO_FAVICON_URL=${FORGEJO_FAVICON_URL:-}
       - FORGEJO_DEFAULT_THEME=${FORGEJO_DEFAULT_THEME:-forgejo-auto}
       - FORGEJO_THEMES=${FORGEJO_THEMES:-}

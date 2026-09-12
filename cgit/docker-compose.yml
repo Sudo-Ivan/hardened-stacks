@@ -14,7 +14,7 @@ services:
       - "127.0.0.1:8080:8080"
       - "127.0.0.1:2222:2222"
     environment:
-      - CGIT_SITE_TITLE=${CGIT_SITE_TITLE:-HardenedStacks Git}
+      - CGIT_SITE_TITLE=${CGIT_SITE_TITLE:-Hardened Stacks Git}
       - CGIT_ROOT_DESC=${CGIT_ROOT_DESC:-Git repositories}
       - CGIT_PUBLIC_URL=${CGIT_PUBLIC_URL:-http://127.0.0.1:8080}
       - CGIT_ENABLE_HTTP_CLONE=${CGIT_ENABLE_HTTP_CLONE:-true}

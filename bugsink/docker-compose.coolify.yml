@@ -1,0 +1,77 @@
+name: bugsink
+
+services:
+  bugsink:
+    image: ${BUGSINK_IMAGE:-ghcr.io/sudo-ivan/hardened-stacks/bugsink:latest}
+    restart: unless-stopped
+    user: "14237:14237"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8000"
+    environment:
+      - SERVICE_URL_BUGSINK_8000
+      - SERVICE_PASSWORD_BUGSINKSECRET
+      - SERVICE_PASSWORD_BUGSINKADMIN
+      - SERVICE_PASSWORD_BUGSINKDB
+      - PORT=8000
+      - BUGSINK_ADMIN_EMAIL=${BUGSINK_ADMIN_EMAIL:-admin@example.com}
+      - BASE_URL=${BUGSINK_BASE_URL:-${SERVICE_URL_BUGSINK_8000:?}}
+      - SECRET_KEY=${SERVICE_PASSWORD_BUGSINKSECRET:?}
+      - CREATE_SUPERUSER=${BUGSINK_ADMIN_EMAIL:-admin@example.com}:${SERVICE_PASSWORD_BUGSINKADMIN:?}
+      - DATABASE_URL=postgresql://bugsink:${SERVICE_PASSWORD_BUGSINKDB:?}@postgres:5432/bugsink
+      - BEHIND_HTTPS_PROXY=${BEHIND_HTTPS_PROXY:-true}
+      - USE_X_FORWARDED_HOST=${USE_X_FORWARDED_HOST:-true}
+      - POSTGRES_USER=bugsink
+      - POSTGRES_DB=bugsink
+      - POSTGRES_HOST=postgres
+      - TZ=${TZ:-UTC}
+    volumes:
+      - bugsink_data:/data
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import requests; requests.get(\"http://127.0.0.1:8000/health/ready\").raise_for_status()'"]
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 90s
+
+  postgres:
+    image: postgres:17-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=bugsink
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_BUGSINKDB:?}
+      - POSTGRES_DB=bugsink
+      - TZ=${TZ:-UTC}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /run/postgresql:size=16m
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bugsink -d bugsink"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  bugsink_data:
+  postgres_data:

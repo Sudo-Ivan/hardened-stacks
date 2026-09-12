@@ -13,7 +13,7 @@ services:
     environment:
       - SERVICE_URL_CGIT_8080
       - CGIT_PUBLIC_URL=${CGIT_PUBLIC_URL:-${SERVICE_URL_CGIT_8080:?}}
-      - CGIT_SITE_TITLE=${CGIT_SITE_TITLE:-HardenedStacks Git}
+      - CGIT_SITE_TITLE=${CGIT_SITE_TITLE:-Hardened Stacks Git}
       - CGIT_ROOT_DESC=${CGIT_ROOT_DESC:-Git repositories}
       - CGIT_ENABLE_HTTP_CLONE=${CGIT_ENABLE_HTTP_CLONE:-true}
       - CGIT_ENABLE_GIT_HTTP=${CGIT_ENABLE_GIT_HTTP:-true}

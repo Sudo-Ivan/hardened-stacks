@@ -133,7 +133,7 @@ services:
       - SPAM_AI_BASE_URL=${SPAM_AI_BASE_URL:-https://openrouter.ai/api/v1}
       - SPAM_AI_MODEL=${SPAM_AI_MODEL:-openai/gpt-4o-mini}
       - SPAM_AI_HTTP_REFERER=${SPAM_AI_HTTP_REFERER:-}
-      - SPAM_AI_APP_TITLE=${SPAM_AI_APP_TITLE:-HardenedStacks}
+      - SPAM_AI_APP_TITLE=${SPAM_AI_APP_TITLE:-Hardened Stacks}
       - FLARUM_MAINTENANCE_MODE=${FLARUM_MAINTENANCE_MODE:-}
       - TZ=${TZ:-UTC}
     volumes:
