@@ -18,6 +18,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | Kaneo | `kaneo/` | 5173 | `ghcr.io/sudo-ivan/hardened-stacks/kaneo` |
 | OneUptime | `oneuptime/` | `ingress:7849` | upstream `oneuptime/*` (digest-pinned) |
 | SigNoz | `signoz/` | `signoz:8080`, `otel-collector:4317/4318` (OTLP) | upstream `signoz/*` (digest-pinned) |
+| Zitadel | `zitadel/` | `zitadel-api:8080` + `zitadel-login:3000` (`/ui/v2/login`) | upstream `ghcr.io/zitadel/*` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -426,6 +427,37 @@ docker compose up -d
 curl -fsS http://127.0.0.1:8080/api/v1/health
 # OTLP receivers come up after the first user registers:
 # curl -fsS -X POST http://127.0.0.1:4318/v1/traces -H 'Content-Type: application/json' -d '{"resourceSpans":[]}'
+```
+
+---
+
+## Zitadel
+
+Hardened Coolify compose for [Zitadel](https://github.com/zitadel/zitadel) v4 with digest-pinned upstream images. Runs the official v4 layout: `zitadel-api` plus the separate `zitadel-login` (Next.js) frontend, backed by PostgreSQL.
+
+### First deploy
+
+Zitadel v4 splits the login UI onto its own service and path. In Coolify, set **two** domain entries on this one compose app:
+
+- `zitadel-api` -> `https://auth.example.com`
+- `zitadel-login` -> `https://auth.example.com/ui/v2/login` (path prefix, same host)
+
+Coolify provides:
+
+- `SERVICE_PASSWORD_ZITADELDB` (postgres)
+- `SERVICE_PASSWORD_ZITADELMASTERKEY` (`ZITADEL_MASTERKEY`, must be **exactly 32 chars**; the generated value works, and it can never be changed without losing encrypted data)
+- `ZITADEL_ADMIN_PASSWORD` for the initial `zitadel-admin` user. Must satisfy the default complexity policy (8+ chars with upper, lower, number, symbol). Defaults to `Password1!` — set it or change it right after first login at `zitadel-admin@zitadel.<domain>`.
+
+The shared `bootstrap` volume holds the `login-client` PAT written by `zitadel-api` on first boot and read by `zitadel-login`. Do not wipe it on an existing install.
+
+Local smoke (uses the bundled v1 login on one port):
+
+```bash
+cd zitadel
+export ZITADEL_DB_PASSWORD ZITADEL_MASTERKEY   # masterkey must be exactly 32 chars
+docker compose up -d
+curl -fsS http://localhost:8080/debug/healthz
+# console at http://localhost:8080/ui/console
 ```
 
 ---

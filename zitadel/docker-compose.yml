@@ -1,0 +1,84 @@
+name: zitadel
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${ZITADEL_DB_PASSWORD:?}
+      - POSTGRES_DB=zitadel
+      - TZ=${TZ:-UTC}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /run/postgresql:size=16m
+    networks:
+      - zitadel
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zitadel"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging: *default-logging
+
+  zitadel:
+    image: ghcr.io/zitadel/zitadel:v4.17.3@sha256:2ec2a42551862ca59dc752c321c7041358dea8b33b63ea5e021ec499ad5e2d9f
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["start-from-init", "--masterkey", "${ZITADEL_MASTERKEY:?}"]
+    environment:
+      - ZITADEL_PORT=8080
+      - ZITADEL_EXTERNALDOMAIN=${ZITADEL_DOMAIN:-localhost}
+      - ZITADEL_EXTERNALPORT=${ZITADEL_UI_PORT:-8080}
+      - ZITADEL_EXTERNALSECURE=false
+      - ZITADEL_TLS_ENABLED=false
+      - ZITADEL_DATABASE_POSTGRES_DSN=postgresql://postgres:${ZITADEL_DB_PASSWORD:?}@postgres:5432/zitadel?sslmode=disable
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD=${ZITADEL_ADMIN_PASSWORD:-Password1!}
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED=false
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false
+      - ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED=true
+      - TZ=${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${ZITADEL_UI_PORT:-8080}:8080"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - zitadel
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/app/zitadel", "ready"]
+      interval: 10s
+      timeout: 30s
+      retries: 12
+      start_period: 20s
+    logging: *default-logging
+
+volumes:
+  postgres_data:
+
+networks:
+  zitadel:
+    driver: bridge

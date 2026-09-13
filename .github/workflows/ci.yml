@@ -561,6 +561,35 @@ jobs:
           docker compose logs
           exit 1
 
+  zitadel-smoke:
+    name: zitadel compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ZITADEL_DB_PASSWORD: ci-zitadel-db-pass
+      ZITADEL_MASTERKEY: zitadel-ci-masterkey-32chars-xxx
+      ZITADEL_ADMIN_PASSWORD: CiAdmin1234!
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke health endpoint
+        working-directory: zitadel
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8080/debug/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose logs
+          exit 1
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest
