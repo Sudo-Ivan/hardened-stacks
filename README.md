@@ -20,6 +20,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | SigNoz | `signoz/` | `signoz:8080`, `otel-collector:4317/4318` (OTLP) | upstream `signoz/*` (digest-pinned) |
 | Zitadel | `zitadel/` | `zitadel-api:8080` + `zitadel-login:3000` (`/ui/v2/login`) | upstream `ghcr.io/zitadel/*` (digest-pinned) |
 | ntfy | `ntfy/` | 8080 | upstream `binwiederhier/ntfy` (digest-pinned) |
+| LiveKit | `livekit/` | `livekit:7880` (signal) + published `7881` TCP, `7882`/udp (media) | upstream `livekit/livekit-server` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -486,6 +487,49 @@ curl -fsS http://127.0.0.1:8080/v1/health
 curl -X POST http://127.0.0.1:8080/testtopic -d 'hello'
 curl 'http://127.0.0.1:8080/testtopic/json?poll=1'
 ```
+
+---
+
+## LiveKit
+
+Digest-pinned upstream [LiveKit](https://github.com/livekit/livekit) SFU: self-hosted WebRTC rooms for voice, video, and AI agents. Stateless single node (no Redis, no volumes), rootless as UID `1000` with a read-only rootfs. All configuration is via env vars.
+
+### First deploy
+
+Point Coolify at `livekit` port `7880` (HTTP/WebSocket signaling and REST API). The compose also publishes `7881` TCP (ICE-over-TCP fallback) and `7882`/udp (muxed WebRTC media) directly on the host, since media traffic cannot ride the HTTP proxy. The firewall has to allow both.
+
+Set:
+
+```bash
+LIVEKIT_API_KEY=...        # short id, e.g. openssl rand -hex 8
+LIVEKIT_API_SECRET=...     # openssl rand -hex 32
+```
+
+`rtc.use_external_ip` defaults to `true`, so ICE candidates advertise the host public IP discovered via STUN. If STUN is blocked or the box has a static public IP, set `LIVEKIT_USE_EXTERNAL_IP=false` and add `NODE_IP=<public-ip>` to the service environment.
+
+Clients connect to `wss://<domain>` with a JWT signed by the key pair. Mint tokens with `livekit-cli create-token` or any LiveKit server SDK.
+
+Optional built-in TURN (for clients on restrictive networks):
+
+```bash
+LIVEKIT_TURN_ENABLED=true
+LIVEKIT_TURN_DOMAIN=turn.example.com
+LIVEKIT_TURN_UDP_PORT=3478   # also publish 3478/udp in the compose file
+# plus LIVEKIT_TURN_CERT / LIVEKIT_TURN_KEY mounts for TLS on 5349
+```
+
+Local smoke:
+
+```bash
+cd livekit
+export LIVEKIT_API_KEY=devkey
+export LIVEKIT_API_SECRET=$(openssl rand -hex 32)
+docker compose up -d
+curl -fsS http://127.0.0.1:7880/
+# connect clients to ws://127.0.0.1:7880 with a token signed by devkey
+```
+
+`NODE_IP` defaults to `127.0.0.1` locally so ICE candidates point at the published ports. For LAN testing set `LIVEKIT_NODE_IP=<lan-ip>` and `LIVEKIT_BIND_IP=0.0.0.0`.
 
 ---
 

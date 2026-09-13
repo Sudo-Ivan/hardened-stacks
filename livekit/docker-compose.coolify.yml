@@ -1,0 +1,44 @@
+name: livekit
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  livekit:
+    image: livekit/livekit-server:v1.13.6@sha256:e37d68f172556d02aa77968b9fc55ef481468c0315fa38e4fa6c56ce72e3a815
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      - "LIVEKIT_KEYS=${LIVEKIT_API_KEY:?}: ${LIVEKIT_API_SECRET:?}"
+      - UDP_PORT=${LIVEKIT_UDP_PORT:-7882}
+      - LIVEKIT_RTC_TCP_PORT=7881
+      - LIVEKIT_RTC_USE_EXTERNAL_IP=${LIVEKIT_USE_EXTERNAL_IP:-true}
+      - TZ=${TZ:-UTC}
+    expose:
+      - "7880"
+    ports:
+      - "${LIVEKIT_TCP_PORT:-7881}:7881"
+      - "${LIVEKIT_UDP_PORT:-7882}:7882/udp"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    read_only: true
+    networks:
+      - livekit
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:7880/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    logging: *default-logging
+
+networks:
+  livekit:
+    driver: bridge
