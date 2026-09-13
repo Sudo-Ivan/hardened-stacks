@@ -590,6 +590,31 @@ jobs:
           docker compose logs
           exit 1
 
+  ntfy-smoke:
+    name: ntfy compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke health and pubsub
+        working-directory: ntfy
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/v1/health >/dev/null; then
+              break
+            fi
+            sleep 5
+          done
+          curl -fsS -X POST http://127.0.0.1:8080/ci-topic -d 'ci ping'
+          curl -fsS 'http://127.0.0.1:8080/ci-topic/json?poll=1' | grep -q 'ci ping'
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest

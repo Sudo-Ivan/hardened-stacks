@@ -19,6 +19,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | OneUptime | `oneuptime/` | `ingress:7849` | upstream `oneuptime/*` (digest-pinned) |
 | SigNoz | `signoz/` | `signoz:8080`, `otel-collector:4317/4318` (OTLP) | upstream `signoz/*` (digest-pinned) |
 | Zitadel | `zitadel/` | `zitadel-api:8080` + `zitadel-login:3000` (`/ui/v2/login`) | upstream `ghcr.io/zitadel/*` (digest-pinned) |
+| ntfy | `ntfy/` | 8080 | upstream `binwiederhier/ntfy` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -458,6 +459,32 @@ export ZITADEL_DB_PASSWORD ZITADEL_MASTERKEY   # masterkey must be exactly 32 ch
 docker compose up -d
 curl -fsS http://localhost:8080/debug/healthz
 # console at http://localhost:8080/ui/console
+```
+
+---
+
+## ntfy
+
+Rootless [ntfy](https://github.com/binwiederhier/ntfy) server: the de facto [UnifiedPush](https://unifiedpush.org)-compatible push transport. Any UP-capable app (Tusky, Element X, Fedilab, ...) can use it as its push server. Runs as UID `1000` with an ephemeral tmpfs cache, so queued messages do not survive a restart (fine for push delivery).
+
+### First deploy
+
+Point Coolify at `ntfy` port `8080`. `NTFY_BASE_URL` is built from the service FQDN automatically.
+
+Default access is anonymous read-write (the upstream default) since topic URLs are unguessable secrets. To lock topics down, set `NTFY_AUTH_DEFAULT_ACCESS=deny-all` and add an auth file with `NTFY_AUTH_FILE` plus `ntfy user add` entries.
+
+### XMPP note
+
+ntfy is the push server half. For XMPP the other half is a UP-to-XMPP rewrite proxy next to your XMPP server: `mod_unified_push` in Prosody (or ejabberd contrib), or the standalone `iNPUTmice/up` component over XEP-0114. Conversations can then act as the on-device UnifiedPush distributor over the XMPP account, no Google FCM involved.
+
+Local smoke:
+
+```bash
+cd ntfy
+docker compose up -d
+curl -fsS http://127.0.0.1:8080/v1/health
+curl -X POST http://127.0.0.1:8080/testtopic -d 'hello'
+curl 'http://127.0.0.1:8080/testtopic/json?poll=1'
 ```
 
 ---
