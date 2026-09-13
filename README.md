@@ -21,6 +21,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | Zitadel | `zitadel/` | `zitadel-api:8080` + `zitadel-login:3000` (`/ui/v2/login`) | upstream `ghcr.io/zitadel/*` (digest-pinned) |
 | ntfy | `ntfy/` | 8080 | upstream `binwiederhier/ntfy` (digest-pinned) |
 | LiveKit | `livekit/` | `livekit:7880` (signal) + published `7881` TCP, `7882`/udp (media) | upstream `livekit/livekit-server` (digest-pinned) |
+| Pocket ID | `pocketid/` | `pocket-id:1411` | upstream `ghcr.io/pocket-id/pocket-id` (distroless, digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -530,6 +531,42 @@ curl -fsS http://127.0.0.1:7880/
 ```
 
 `NODE_IP` defaults to `127.0.0.1` locally so ICE candidates point at the published ports. For LAN testing set `LIVEKIT_NODE_IP=<lan-ip>` and `LIVEKIT_BIND_IP=0.0.0.0`.
+
+---
+
+## Pocket ID
+
+Distroless [Pocket ID](https://github.com/pocket-id/pocket-id): a passkeys-first OIDC provider for WebAuthn sign-on in front of self-hosted apps. Runs rootless as UID `65532` with a read-only rootfs and all caps dropped. State is SQLite on the `pocketid_data` volume.
+
+The distroless image ships no `/app/data` directory, so a fresh named volume comes up root-owned. A one-shot `pocket-id-init` service (pinned alpine, `network_mode: none`, `CHOWN` and `DAC_READ_SEARCH` only) fixes ownership before each start.
+
+### First deploy
+
+Point Coolify at `pocket-id` port `1411`. `APP_URL` is derived from the service FQDN and `TRUST_PROXY=true` is the default since only the proxy can reach the container.
+
+Coolify provides `SERVICE_PASSWORD_POCKETID` for `ENCRYPTION_KEY`, which protects the token signing keys. It can never be changed without losing access to existing encrypted data (rotate with `pocket-id encryption-key-rotate` if needed).
+
+Create the admin passkey account at `https://<domain>/setup`. HTTPS is required, WebAuthn only runs in a secure context.
+
+Optional:
+
+```bash
+POCKETID_TRUST_PROXY=10.0.0.0/8   # tighten to Coolify proxy ranges if known
+POCKETID_MAXMIND_LICENSE_KEY=     # GeoLite2, audit log IP locations
+POCKETID_ANALYTICS_DISABLED=true
+POCKETID_VERSION_CHECK_DISABLED=true
+POCKETID_ALLOW_INSECURE_CALLBACK_URLS=false  # keep false unless a client needs plain http callbacks
+```
+
+Local smoke:
+
+```bash
+cd pocketid
+export POCKETID_ENCRYPTION_KEY=$(openssl rand -base64 32)
+docker compose up -d
+curl -fsS http://127.0.0.1:1411/.well-known/openid-configuration
+# UI needs HTTPS for WebAuthn, the smoke covers the OIDC surface only
+```
 
 ---
 

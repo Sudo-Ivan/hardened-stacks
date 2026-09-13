@@ -1,0 +1,68 @@
+name: pocketid
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  pocket-id-init:
+    image: alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+    command: ["chown", "-R", "65532:65532", "/data"]
+    volumes:
+      - pocketid_data:/data
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v2.14.0-distroless@sha256:e0f83a42a78d0759b6d2d8c7380ef0fa8a4c95dfa01ad88740a073ae9cc4ba94
+    restart: unless-stopped
+    user: "65532:65532"
+    depends_on:
+      pocket-id-init:
+        condition: service_completed_successfully
+    environment:
+      - APP_URL=${POCKETID_APP_URL:-http://localhost:1411}
+      - ENCRYPTION_KEY=${POCKETID_ENCRYPTION_KEY:?}
+      - TRUST_PROXY=${POCKETID_TRUST_PROXY:-false}
+      - ALLOW_INSECURE_CALLBACK_URLS=${POCKETID_ALLOW_INSECURE_CALLBACK_URLS:-false}
+      - ANALYTICS_DISABLED=${POCKETID_ANALYTICS_DISABLED:-false}
+      - VERSION_CHECK_DISABLED=${POCKETID_VERSION_CHECK_DISABLED:-false}
+      - MAXMIND_LICENSE_KEY=${POCKETID_MAXMIND_LICENSE_KEY:-}
+      - TZ=${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${POCKETID_PORT:-1411}:1411"
+    volumes:
+      - pocketid_data:/app/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - pocketid
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging: *default-logging
+
+volumes:
+  pocketid_data:
+
+networks:
+  pocketid:
+    driver: bridge
