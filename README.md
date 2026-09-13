@@ -542,7 +542,15 @@ The distroless image ships no `/app/data` directory, so a fresh named volume com
 
 ### First deploy
 
-Point Coolify at `pocket-id` port `1411`. `APP_URL` is derived from the service FQDN and `TRUST_PROXY=true` is the default since only the proxy can reach the container.
+Point Coolify at `pocket-id` port `1411`. `TRUST_PROXY=true` is the default since only the proxy can reach the container.
+
+Required:
+
+```bash
+POCKETID_APP_URL=https://id.example.com   # full public origin, no port, no trailing slash
+```
+
+Coolify keeps the container routing port in the generated `SERVICE_FQDN_*`/`SERVICE_URL_*` vars, so `APP_URL` cannot be derived from them (the distroless image has no shell to strip it). Set `POCKETID_APP_URL` explicitly.
 
 Coolify provides `SERVICE_PASSWORD_POCKETID` for `ENCRYPTION_KEY`, which protects the token signing keys. It can never be changed without losing access to existing encrypted data (rotate with `pocket-id encryption-key-rotate` if needed).
 
