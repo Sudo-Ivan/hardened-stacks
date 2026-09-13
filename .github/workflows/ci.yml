@@ -531,6 +531,36 @@ jobs:
           docker compose logs
           exit 1
 
+  signoz-smoke:
+    name: signoz compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SIGNOZ_DB_PASSWORD: ci-signoz-db-pass
+      SIGNOZ_JWT_SECRET: ci-signoz-jwt-secret-value-32xxxx
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke health endpoint
+        working-directory: signoz
+        run: |
+          for i in 1 2 3; do
+            docker compose up -d && break || sleep 30
+          done
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose logs
+          exit 1
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest

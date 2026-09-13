@@ -17,6 +17,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | Bugsink | `bugsink/` | 8000 | `ghcr.io/sudo-ivan/hardened-stacks/bugsink` |
 | Kaneo | `kaneo/` | 5173 | `ghcr.io/sudo-ivan/hardened-stacks/kaneo` |
 | OneUptime | `oneuptime/` | `ingress:7849` | upstream `oneuptime/*` (digest-pinned) |
+| SigNoz | `signoz/` | `signoz:8080`, `otel-collector:4317/4318` (OTLP) | upstream `signoz/*` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -397,6 +398,34 @@ export CLICKHOUSE_PASSWORD VALKEY_PASSWORD GLOBAL_PROBE_1_KEY
 # set each to a long random value
 docker compose up -d
 curl -fsS http://127.0.0.1:8088/status
+```
+
+---
+
+## SigNoz
+
+Hardened Coolify compose for [SigNoz](https://github.com/SigNoz/signoz) using digest-pinned upstream images (signoz, otel-collector, postgres, ClickHouse + Keeper). No custom GHCR image. Layout follows the Foundry-generated compose (upstream's bundled `deploy/` files are deprecated since v0.130.0).
+
+### First deploy
+
+Point Coolify at `signoz` port `8080`. Coolify provides:
+
+- `SERVICE_PASSWORD_SIGNOZDB` (postgres metastore)
+- `SERVICE_PASSWORD_SIGNOZJWT` (`SIGNOZ_TOKENIZER_JWT_SECRET`, session signing)
+
+Create the first user/org in the UI. The bundled `otel-collector` only opens its OTLP receivers (4317 gRPC, 4318 HTTP) after an org exists — the signoz opamp server rejects agents with "cannot create agent without orgId" until then, and the collector retries every 30s. To accept telemetry from outside, assign a domain to `otel-collector` port `4318` (HTTP) in Coolify.
+
+ClickHouse auth is network-scoped (empty password, reachable only inside the compose network, no published ports).
+
+Local smoke:
+
+```bash
+cd signoz
+export SIGNOZ_DB_PASSWORD SIGNOZ_JWT_SECRET   # long random values
+docker compose up -d
+curl -fsS http://127.0.0.1:8080/api/v1/health
+# OTLP receivers come up after the first user registers:
+# curl -fsS -X POST http://127.0.0.1:4318/v1/traces -H 'Content-Type: application/json' -d '{"resourceSpans":[]}'
 ```
 
 ---

@@ -1,0 +1,249 @@
+name: signoz
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-bookworm@sha256:bb3e1a57e5407e0a5280b4211980a5e537f4abd234a87014ac979849a78dd825
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=signoz
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_SIGNOZDB:?}
+      - POSTGRES_DB=signoz
+      - TZ=${TZ:-UTC}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /run/postgresql:size=16m
+    networks:
+      - signoz
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signoz -d signoz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging: *default-logging
+
+  clickhouse-keeper:
+    image: clickhouse/clickhouse-keeper:25.12.5@sha256:525b8b0f93ccb371131c46f22a066ea43d33d74aba314203e8044609945d8524
+    restart: unless-stopped
+    entrypoint: ["/usr/bin/clickhouse-keeper", "--config-file=/etc/clickhouse-keeper/keeper.yaml"]
+    volumes:
+      - keeper_data:/var/lib/clickhouse-keeper
+      - ./clickhouse-keeper/keeper.yaml:/etc/clickhouse-keeper/keeper.yaml:ro
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    networks:
+      - signoz
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "clickhouse-keeper-client", "-h", "localhost", "-p", "9181", "-q", "ls"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging: *default-logging
+
+  clickhouse-init:
+    image: clickhouse/clickhouse-server:25.12.5@sha256:cacf32d6884291dc2ff5e0156a97f46fc53ff7c929a7906d114e268a929dfd3a
+    restart: on-failure
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        version="v0.0.1"
+        node_os="$$(uname -s | tr '[:upper:]' '[:lower:]')"
+        node_arch="$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)"
+        echo "Fetching histogram-quantile for $${node_os}/$${node_arch}"
+        cd /tmp
+        wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+        tar --no-same-owner -xvzf histogram-quantile.tar.gz
+        mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
+    volumes:
+      - user_scripts:/var/lib/clickhouse/user_scripts
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    networks:
+      - signoz
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.12.5@sha256:cacf32d6884291dc2ff5e0156a97f46fc53ff7c929a7906d114e268a929dfd3a
+    restart: unless-stopped
+    depends_on:
+      clickhouse-keeper:
+        condition: service_healthy
+      clickhouse-init:
+        condition: service_completed_successfully
+    environment:
+      - CLICKHOUSE_SKIP_USER_SETUP=1
+      - CLICKHOUSE_CONFIG=/etc/clickhouse-server/config.yaml
+      - TZ=${TZ:-UTC}
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - user_scripts:/var/lib/clickhouse/user_scripts:ro
+      - ./clickhouse/config.yaml:/etc/clickhouse-server/config.yaml:ro
+      - ./clickhouse/functions.yaml:/etc/clickhouse-server/functions.yaml:ro
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - signoz
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    logging: *default-logging
+
+  migrator:
+    image: signoz/signoz-otel-collector:v0.144.9@sha256:72aa1e4c1ec529f178e962c049be35cfd7abae02fe9a397edad10b4a9cba62fa
+    restart: on-failure
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    entrypoint: ["/bin/sh"]
+    command:
+      - -c
+      - |
+        /signoz-otel-collector migrate ready &&
+        /signoz-otel-collector migrate bootstrap &&
+        /signoz-otel-collector migrate sync up &&
+        /signoz-otel-collector migrate async up
+    environment:
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    networks:
+      - signoz
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  signoz:
+    image: signoz/signoz:v0.141.1@sha256:c10fa03e103c76bba2d67452bd26925f08a69f2a7b8d0f7982cea0e4f81ce88e
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    environment:
+      - SERVICE_URL_SIGNOZ_8080
+      - SIGNOZ_SQLSTORE_PROVIDER=postgres
+      - SIGNOZ_SQLSTORE_POSTGRES_DSN=postgres://signoz:${SERVICE_PASSWORD_SIGNOZDB:?}@postgres:5432/signoz?sslmode=disable
+      - SIGNOZ_TOKENIZER_JWT_SECRET=${SERVICE_PASSWORD_SIGNOZJWT:?}
+      - SIGNOZ_TELEMETRYSTORE_PROVIDER=clickhouse
+      - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_WEB_ENABLED=true
+      - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
+      - TZ=${TZ:-UTC}
+    expose:
+      - "8080"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - signoz
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    logging: *default-logging
+
+  otel-collector:
+    image: signoz/signoz-otel-collector:v0.144.9@sha256:72aa1e4c1ec529f178e962c049be35cfd7abae02fe9a397edad10b4a9cba62fa
+    restart: unless-stopped
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      signoz:
+        condition: service_started
+    entrypoint: ["/bin/sh"]
+    command:
+      - -c
+      - |
+        /signoz-otel-collector migrate sync check &&
+        /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/opamp-config.yaml --copy-path=/var/tmp/collector-config.yaml
+    environment:
+      - SERVICE_URL_OTELCOLLECTOR_4318
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+      - LOW_CARDINAL_EXCEPTION_GROUPING=${LOW_CARDINAL_EXCEPTION_GROUPING:-false}
+      - TZ=${TZ:-UTC}
+    expose:
+      - "4317"
+      - "4318"
+    volumes:
+      - ./otel-collector/ingester.yaml:/etc/otel-collector-config.yaml:ro
+      - ./otel-collector/opamp.yaml:/etc/opamp-config.yaml:ro
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /var/tmp:size=64m,mode=1777
+    networks:
+      - signoz
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/13133 && printf 'GET / HTTP/1.0\r\n\r\n' >&3 && head -1 <&3 | grep -q '200'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging: *default-logging
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  keeper_data:
+  user_scripts:
+
+networks:
+  signoz:
+    driver: bridge
