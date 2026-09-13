@@ -31,6 +31,7 @@ services:
       pocket-id-init:
         condition: service_completed_successfully
     environment:
+      - SERVICE_FQDN_POCKET_ID_1411
       - APP_URL=${POCKETID_APP_URL:?}
       - ENCRYPTION_KEY=${SERVICE_PASSWORD_POCKETID:?}
       - TRUST_PROXY=${POCKETID_TRUST_PROXY:-true}
