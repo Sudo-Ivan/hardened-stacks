@@ -189,7 +189,7 @@ services:
     restart: unless-stopped
     depends_on:
       app:
-        condition: service_healthy
+        condition: service_started
       ingress:
         condition: service_started
     shm_size: ${GLOBAL_PROBE_1_SHM_SIZE:-512m}
