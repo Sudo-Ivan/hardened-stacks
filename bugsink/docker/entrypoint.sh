@@ -5,7 +5,22 @@ DATA_DIR="${DATA_DIR:-/data}"
 mkdir -p "${DATA_DIR}"
 
 if [ -z "${BASE_URL:-}" ] && [ -n "${SERVICE_URL_BUGSINK_8000:-}" ]; then
-  export BASE_URL="${SERVICE_URL_BUGSINK_8000}"
+  # Coolify keeps the container routing port in SERVICE_URL_*
+  # (e.g. https://host:8000). Visitors reach the app on 443/80, so the
+  # port must be stripped or BugSink builds unreachable DSNs from it.
+  base_url="${SERVICE_URL_BUGSINK_8000%/}"
+  case "$base_url" in
+    *:8000)
+      base_url="${base_url%:8000}"
+      ;;
+    https://*:443)
+      base_url="${base_url%:443}"
+      ;;
+    http://*:80)
+      base_url="${base_url%:80}"
+      ;;
+  esac
+  export BASE_URL="${base_url}"
 fi
 
 if [ -z "${SECRET_KEY:-}" ] && [ -n "${SERVICE_PASSWORD_BUGSINKSECRET:-}" ]; then

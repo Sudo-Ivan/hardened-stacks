@@ -330,7 +330,7 @@ Optional:
 
 ```bash
 BUGSINK_ADMIN_EMAIL=admin@example.com
-BUGSINK_BASE_URL=https://errors.example.com   # else SERVICE_URL_BUGSINK_8000
+BUGSINK_BASE_URL=https://errors.example.com   # else SERVICE_URL_BUGSINK_8000 (container port stripped)
 ```
 
 Log in with the admin email and generated password, then create a project and copy the DSN into your Sentry SDKs.
