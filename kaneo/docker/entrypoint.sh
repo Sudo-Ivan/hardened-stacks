@@ -2,7 +2,12 @@
 set -eu
 
 if [ -z "${KANEO_CLIENT_URL:-}" ] && [ -n "${SERVICE_URL_KANEO_5173:-}" ]; then
-  export KANEO_CLIENT_URL="${SERVICE_URL_KANEO_5173}"
+  # Coolify keeps the container routing port in SERVICE_URL_*
+  # (e.g. https://host:5173). Visitors reach the app on 443/80, so the
+  # port must be stripped before upstream derives KANEO_API_URL from it.
+  client_url="${SERVICE_URL_KANEO_5173%/}"
+  client_url="${client_url%:5173}"
+  export KANEO_CLIENT_URL="${client_url}"
 fi
 
 if [ -z "${AUTH_SECRET:-}" ] && [ -n "${SERVICE_PASSWORD_KANEOAUTH:-}" ]; then

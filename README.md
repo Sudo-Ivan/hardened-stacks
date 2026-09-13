@@ -352,7 +352,7 @@ Point Coolify at port `5173`. Coolify provides:
 Optional:
 
 ```bash
-KANEO_CLIENT_URL=https://pm.example.com   # else SERVICE_URL_KANEO_5173
+KANEO_CLIENT_URL=https://pm.example.com   # else SERVICE_URL_KANEO_5173 (container port stripped)
 ```
 
 Open the URL and create the first workspace account. Object storage (`S3_*`) is optional for uploads.
