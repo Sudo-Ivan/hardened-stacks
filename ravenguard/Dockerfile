@@ -13,7 +13,7 @@ RUN apk add --no-cache git ca-certificates \
  && cd /src \
  && git checkout "${RAVENGUARD_REF}"
 
-FROM golang:1.26.6-bookworm AS build
+FROM golang:1.27.0-bookworm AS build
 WORKDIR /src
 COPY --from=src /src/go.mod /src/go.sum ./
 RUN go mod download
