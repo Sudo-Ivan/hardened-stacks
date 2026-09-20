@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   verdaccio-init:
-    image: alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+    image: alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
     command: ["chown", "-R", "10001:10001", "/verdaccio/storage"]
     volumes:
       - verdaccio_storage:/verdaccio/storage
@@ -24,7 +24,7 @@ services:
     logging: *default-logging
 
   verdaccio:
-    image: verdaccio/verdaccio:6.10.1@sha256:fcb86134563534e2f634752e6c6c3edcdb78242ec16578c73ce39d1dadbaa801
+    image: verdaccio/verdaccio:6.10.4@sha256:43c4067288b050422265407ea2fe747e511fcd0c407a85ec90ab9a326d9400cd
     restart: unless-stopped
     user: "10001:10001"
     depends_on:
