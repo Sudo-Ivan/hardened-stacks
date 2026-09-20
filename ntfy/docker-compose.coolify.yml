@@ -11,24 +11,27 @@ services:
     image: binwiederhier/ntfy:v2.28.0@sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da
     restart: unless-stopped
     user: "1000:1000"
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["mkdir -p /tmp/ntfy/attachments && exec ntfy serve"]
+    command: ["serve"]
     environment:
       - SERVICE_FQDN_NTFY_8080
       - NTFY_LISTEN_HTTP=:8080
-      - NTFY_BASE_URL=https://${SERVICE_FQDN_NTFY_8080:?}
+      - NTFY_BASE_URL=${NTFY_BASE_URL:?}
       - NTFY_BEHIND_PROXY=true
-      - NTFY_CACHE_FILE=/tmp/ntfy/cache.db
-      - NTFY_ATTACHMENT_CACHE_DIR=/tmp/ntfy/attachments
-      - NTFY_AUTH_DEFAULT_ACCESS=${NTFY_AUTH_DEFAULT_ACCESS:-read-write}
-      - NTFY_ENABLE_LOGIN=true
+      - NTFY_CACHE_FILE=/tmp/cache.db
+      - NTFY_AUTH_DEFAULT_ACCESS=read-write
+      - NTFY_ENABLE_LOGIN=false
+      - NTFY_ENABLE_SIGNUP=false
+      - NTFY_UPSTREAM_BASE_URL=${NTFY_UPSTREAM_BASE_URL:-https://ntfy.sh}
+      - NTFY_VISITOR_SUBSCRIBER_RATE_LIMITING=true
+      - NTFY_VISITOR_MESSAGE_DAILY_LIMIT=${NTFY_VISITOR_MESSAGE_DAILY_LIMIT:-5000}
       - TZ=${TZ:-UTC}
     expose:
       - "8080"
     tmpfs:
-      - /tmp:size=256m,mode=1777
+      - /tmp:size=64m,mode=1777
     networks:
       - ntfy
+    read_only: true
     cap_drop:
       - ALL
     security_opt:

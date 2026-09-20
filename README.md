@@ -469,13 +469,26 @@ curl -fsS http://localhost:8080/debug/healthz
 
 ## ntfy
 
-Rootless [ntfy](https://github.com/binwiederhier/ntfy) server: the de facto [UnifiedPush](https://unifiedpush.org)-compatible push transport. Any UP-capable app (Tusky, Element X, Fedilab, ...) can use it as its push server. Runs as UID `1000` with an ephemeral tmpfs cache, so queued messages do not survive a restart (fine for push delivery).
+Rootless [ntfy](https://github.com/binwiederhier/ntfy) server tuned as a **public UnifiedPush / push-notification** relay. Anonymous read-write stays on so UP distributors and app servers can use random `up*` topics. Attachments and signup are off. Message cache is ephemeral tmpfs (survives process, not container recreate). Runs as UID `1000`, read-only rootfs, all caps dropped.
 
 ### First deploy
 
-Point Coolify at `ntfy` port `8080`. `NTFY_BASE_URL` is built from the service FQDN automatically.
+Point Coolify at `ntfy` port `8080` (domain like `https://push.example.com:8080`).
 
-Default access is anonymous read-write (the upstream default) since topic URLs are unguessable secrets. To lock topics down, set `NTFY_AUTH_DEFAULT_ACCESS=deny-all` and add an auth file with `NTFY_AUTH_FILE` plus `ntfy user add` entries.
+Required (no port in the URL — Coolify’s `:8080` suffix must not appear here or attachment/callback URLs break):
+
+```bash
+NTFY_BASE_URL=https://push.example.com
+```
+
+Optional:
+
+```bash
+NTFY_UPSTREAM_BASE_URL=https://ntfy.sh   # iOS relay (default)
+NTFY_VISITOR_MESSAGE_DAILY_LIMIT=5000    # abuse cap per visitor IP
+```
+
+Clients: set the UnifiedPush distributor / app push server to `https://push.example.com`. Topic URLs are the secret.
 
 ### XMPP note
 
