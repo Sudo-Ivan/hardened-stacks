@@ -667,6 +667,32 @@ jobs:
           docker compose logs
           exit 1
 
+  privatebin-smoke:
+    name: privatebin compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke UI
+        working-directory: privatebin
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ || true)
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest

@@ -23,6 +23,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | LiveKit | `livekit/` | `livekit:7880` (signal) + published `7881` TCP, `7882`/udp (media) | upstream `livekit/livekit-server` (digest-pinned) |
 | Pocket ID | `pocketid/` | `pocket-id:1411` | upstream `ghcr.io/pocket-id/pocket-id` (distroless, digest-pinned) |
 | Verdaccio | `verdaccio/` | `verdaccio:4873` | upstream `verdaccio/verdaccio` (digest-pinned) |
+| PrivateBin | `privatebin/` | `privatebin:8080` | upstream `privatebin/nginx-fpm-alpine` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -610,6 +611,28 @@ Local smoke:
 cd verdaccio
 docker compose up -d
 curl -fsS http://127.0.0.1:4873/-/ping
+```
+
+---
+
+## PrivateBin
+
+Digest-pinned upstream [PrivateBin](https://privatebin.info/): a zero-knowledge pastebin. The browser encrypts with AES-256-GCM before upload, so the server only stores ciphertext. Runs as UID `65534` / GID `82` with a read-only rootfs, all caps dropped, and pastes on the `privatebin_data` volume.
+
+Public-ready defaults in `config/conf.php`: discussions and uploads off, burn-after-reading preselected, 2 MiB size cap, rate limit with `X-Forwarded-For`, forced expiry (no “never”), passwords enabled.
+
+### First deploy
+
+Point Coolify at `privatebin` port `8080` (domain like `https://paste.example.com:8080`). Use `docker-compose.coolify.yml` so `conf.php` is embedded via Coolify `content:` (avoids the missing-file-becomes-directory trap).
+
+HTTPS is required for a trustworthy instance (Coolify terminates TLS). Share links include the decryption key in the URL fragment (`#...`). Use a paste password for anything sensitive.
+
+Local smoke:
+
+```bash
+cd privatebin
+docker compose up -d
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/
 ```
 
 ---

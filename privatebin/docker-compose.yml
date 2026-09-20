@@ -1,0 +1,72 @@
+name: privatebin
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  privatebin-init:
+    image: alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
+    command: ["chown", "-R", "65534:82", "/srv/data"]
+    volumes:
+      - privatebin_data:/srv/data
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  privatebin:
+    image: privatebin/nginx-fpm-alpine:2.0.6@sha256:13290e2f04bfd98cf8fc7e8d216fb76b2b2d12373d4923b859cd41c2d984fde8
+    restart: unless-stopped
+    user: "65534:82"
+    depends_on:
+      privatebin-init:
+        condition: service_completed_successfully
+    environment:
+      - TZ=${TZ:-UTC}
+      - PHP_TZ=${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${PRIVATEBIN_PORT:-8080}:8080"
+    volumes:
+      - privatebin_data:/srv/data
+      - ./config/conf.php:/srv/cfg/conf.php:ro
+    tmpfs:
+      - /tmp:size=64m,mode=1777,nodev,noexec
+      - /run:size=16m,mode=1777,nodev,exec
+      - /var/lib/nginx/tmp:size=64m,mode=1777,nodev,noexec
+    networks:
+      - privatebin
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://127.0.0.1:8080/",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+    logging: *default-logging
+
+volumes:
+  privatebin_data:
+
+networks:
+  privatebin:
+    driver: bridge

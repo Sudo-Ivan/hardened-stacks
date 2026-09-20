@@ -1,0 +1,125 @@
+name: privatebin
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  privatebin-init:
+    image: alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
+    command: ["chown", "-R", "65534:82", "/srv/data"]
+    volumes:
+      - privatebin_data:/srv/data
+    network_mode: none
+    read_only: true
+    exclude_from_hc: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  privatebin:
+    image: privatebin/nginx-fpm-alpine:2.0.6@sha256:13290e2f04bfd98cf8fc7e8d216fb76b2b2d12373d4923b859cd41c2d984fde8
+    restart: unless-stopped
+    user: "65534:82"
+    depends_on:
+      privatebin-init:
+        condition: service_completed_successfully
+    environment:
+      - SERVICE_FQDN_PRIVATEBIN_8080
+      - TZ=${TZ:-UTC}
+      - PHP_TZ=${TZ:-UTC}
+    expose:
+      - "8080"
+    volumes:
+      - privatebin_data:/srv/data
+      - type: bind
+        source: ./config/conf.php
+        target: /srv/cfg/conf.php
+        content: |
+          ;<?php http_response_code(403); /*
+          ; Hardened PrivateBin defaults for public paste hosting.
+          ; Server stores ciphertext only (AES-256-GCM in the browser).
+
+          [main]
+          name = "Paste"
+          basepath = "https://${SERVICE_FQDN_PRIVATEBIN_8080}/"
+          discussion = false
+          opendiscussion = false
+          password = true
+          fileupload = false
+          burnafterreadingselected = true
+          defaultformatter = "plaintext"
+          sizelimit = 2097152
+          templateselection = false
+          languageselection = false
+          httpwarning = true
+          compression = "zlib"
+          notice = "Pastes are encrypted in your browser. The server cannot read them. Do not share the full URL if the paste is sensitive unless you also set a password."
+
+          [expire]
+          default = "1day"
+
+          [expire_options]
+          5min = 300
+          10min = 600
+          1hour = 3600
+          1day = 86400
+          1week = 604800
+          1month = 2592000
+
+          [formatter_options]
+          plaintext = "Plain Text"
+          syntaxhighlighting = "Source Code"
+          markdown = "Markdown"
+
+          [traffic]
+          limit = 10
+          header = "X_FORWARDED_FOR"
+
+          [purge]
+          limit = 300
+          batchsize = 10
+
+          [model]
+          class = Filesystem
+          [model_options]
+          dir = PATH "data"
+    tmpfs:
+      - /tmp:size=64m,mode=1777,nodev,noexec
+      - /run:size=16m,mode=1777,nodev,exec
+      - /var/lib/nginx/tmp:size=64m,mode=1777,nodev,noexec
+    networks:
+      - privatebin
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://127.0.0.1:8080/",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+    logging: *default-logging
+
+volumes:
+  privatebin_data:
+
+networks:
+  privatebin:
+    driver: bridge
