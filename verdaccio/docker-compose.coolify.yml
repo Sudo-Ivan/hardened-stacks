@@ -14,6 +14,7 @@ services:
       - verdaccio_storage:/verdaccio/storage
     network_mode: none
     read_only: true
+    exclude_from_hc: true
     cap_drop:
       - ALL
     cap_add:
@@ -34,13 +35,83 @@ services:
       - SERVICE_FQDN_VERDACCIO_4873
       - VERDACCIO_PORT=4873
       - VERDACCIO_PROTOCOL=http
+      - VERDACCIO_ADDRESS=0.0.0.0
       - VERDACCIO_PUBLIC_URL=https://${SERVICE_FQDN_VERDACCIO_4873:?}
       - TZ=${TZ:-UTC}
     expose:
       - "4873"
     volumes:
       - verdaccio_storage:/verdaccio/storage
-      - ./config/config.yaml:/verdaccio/conf/config.yaml:ro
+      - type: bind
+        source: ./config/config.yaml
+        target: /verdaccio/conf/config.yaml
+        content: |
+          storage: /verdaccio/storage/data
+          plugins: /verdaccio/plugins
+
+          web:
+            title: Verdaccio
+            darkMode: false
+            login: true
+
+          auth:
+            htpasswd:
+              file: /verdaccio/storage/htpasswd
+              max_users: 1
+
+          uplinks:
+            npmjs:
+              url: https://registry.npmjs.org/
+              maxage: 30m
+              timeout: 30s
+              fail_timeout: 5m
+              max_fails: 5
+              cache: true
+
+          packages:
+            "@local/*":
+              access: $$authenticated
+              publish: $$authenticated
+              unpublish: $$authenticated
+
+            "@*/*":
+              access: $$authenticated
+              publish: $$authenticated
+              unpublish: $$authenticated
+              proxy: npmjs
+
+            "**":
+              access: $$authenticated
+              publish: $$authenticated
+              unpublish: $$authenticated
+              proxy: npmjs
+
+          server:
+            keepAliveTimeout: 60
+            dotfiles: deny
+            trustProxy: true
+            passwordValidationRegex: "/.{12}$$/"
+
+          security:
+            api:
+              jwt:
+                sign:
+                  expiresIn: 15d
+            web:
+              sign:
+                expiresIn: 1h
+
+          middlewares:
+            audit:
+              enabled: true
+
+          log:
+            type: stdout
+            format: pretty
+            level: http
+
+          i18n:
+            web: en-US
     tmpfs:
       - /tmp:size=128m,mode=1777
     networks:

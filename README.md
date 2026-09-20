@@ -587,10 +587,12 @@ The bundled `config/config.yaml` requires authentication for install and publish
 
 ### First deploy
 
-Point Coolify at `verdaccio` port `4873`. `VERDACCIO_PUBLIC_URL` is built from the service FQDN automatically.
+Point Coolify at `verdaccio` port `4873` (domain like `https://npm.example.com:4873`). `VERDACCIO_PUBLIC_URL` is built from the service FQDN automatically.
+
+Use `docker-compose.coolify.yml`. It embeds `config.yaml` via Coolify's `content:` bind so the config exists even for Docker Compose Empty (a plain `./config/config.yaml` mount creates a directory and breaks the start).
 
 1. Open the UI and register the first user (password must be at least 12 characters)
-2. Set `max_users: -1` in `config/config.yaml` (or remount an override) and redeploy so nobody else can register
+2. Set `max_users: -1` in the embedded config (Edit Compose File) and redeploy so nobody else can register
 3. Point clients at the registry:
 
 ```bash
