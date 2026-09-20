@@ -582,15 +582,17 @@ curl -fsS http://127.0.0.1:1411/.well-known/openid-configuration
 
 ## Verdaccio
 
-Digest-pinned upstream [Verdaccio](https://www.verdaccio.org/): a lightweight private npm proxy registry with caching. Runs rootless as UID `10001` with a read-only rootfs and all caps dropped. Package storage and `htpasswd` live on the `verdaccio_storage` volume.
+Digest-pinned upstream [Verdaccio](https://www.verdaccio.org/): a lightweight private npm proxy registry with caching. Runs rootless as UID `10001` with a read-only rootfs and all caps dropped. Package storage and `htpasswd` live on the `verdaccio_storage` volume (seeded from the image, no init container).
 
-The bundled `config/config.yaml` requires authentication for install and publish, allows one self-registration (`max_users: 1`), uses JWT with expiry, and keeps `@local/*` free of the npmjs uplink (dependency confusion guard). Public packages still proxy/cache from `registry.npmjs.org` for authenticated clients.
+The Coolify compose embeds `config.yaml` via Coolify's `content:` bind so the config exists even for Docker Compose Empty. A plain `./config/...` mount without the file creates a directory and breaks the start.
 
 ### First deploy
 
 Point Coolify at `verdaccio` port `4873` (domain like `https://npm.example.com:4873`). `VERDACCIO_PUBLIC_URL` is built from the service FQDN automatically.
 
-Use `docker-compose.coolify.yml`. It embeds `config.yaml` via Coolify's `content:` bind so the config exists even for Docker Compose Empty (a plain `./config/config.yaml` mount creates a directory and breaks the start).
+Use `docker-compose.coolify.yml`. Auth requires login for install/publish, one bootstrap registration (`max_users: 1`), JWT expiry, and `@local/*` with no npmjs uplink.
+
+If a previous deploy left a root-owned empty volume (from a failed init), delete the `verdaccio_storage` volume once in Coolify before redeploying so Docker can seed ownership from the image.
 
 1. Open the UI and register the first user (password must be at least 12 characters)
 2. Set `max_users: -1` in the embedded config (Edit Compose File) and redeploy so nobody else can register
@@ -617,15 +619,17 @@ curl -fsS http://127.0.0.1:4873/-/ping
 
 ## PrivateBin
 
-Digest-pinned upstream [PrivateBin](https://privatebin.info/): a zero-knowledge pastebin. The browser encrypts with AES-256-GCM before upload, so the server only stores ciphertext. Runs as UID `65534` / GID `82` with a read-only rootfs, all caps dropped, and pastes on the `privatebin_data` volume.
+Digest-pinned upstream [PrivateBin](https://privatebin.info/): a zero-knowledge pastebin. The browser encrypts with AES-256-GCM before upload, so the server only stores ciphertext. Runs as UID `65534` / GID `82` with a read-only rootfs, all caps dropped, and pastes on the `privatebin_data` volume (seeded from the image, same pattern as Coolify's own PrivateBin template).
 
 Public-ready defaults in `config/conf.php`: discussions and uploads off, burn-after-reading preselected, 2 MiB size cap, rate limit with `X-Forwarded-For`, forced expiry (no “never”), passwords enabled.
 
 ### First deploy
 
-Point Coolify at `privatebin` port `8080` (domain like `https://paste.example.com:8080`). Use `docker-compose.coolify.yml` so `conf.php` is embedded via Coolify `content:` (avoids the missing-file-becomes-directory trap).
+Point Coolify at `privatebin` port `8080` (domain like `https://paste.example.com:8080`). Use `docker-compose.coolify.yml` so `conf.php` is embedded via Coolify `content:`.
 
 HTTPS is required for a trustworthy instance (Coolify terminates TLS). Share links include the decryption key in the URL fragment (`#...`). Use a paste password for anything sensitive.
+
+If a previous deploy left a root-owned empty volume, delete `privatebin_data` once before redeploying.
 
 Local smoke:
 

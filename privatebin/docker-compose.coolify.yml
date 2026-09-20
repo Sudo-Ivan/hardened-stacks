@@ -7,30 +7,10 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
-  privatebin-init:
-    image: alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
-    command: ["chown", "-R", "65534:82", "/srv/data"]
-    volumes:
-      - privatebin_data:/srv/data
-    network_mode: none
-    read_only: true
-    exclude_from_hc: true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - DAC_READ_SEARCH
-    security_opt:
-      - no-new-privileges:true
-    logging: *default-logging
-
   privatebin:
     image: privatebin/nginx-fpm-alpine:2.0.6@sha256:13290e2f04bfd98cf8fc7e8d216fb76b2b2d12373d4923b859cd41c2d984fde8
     restart: unless-stopped
     user: "65534:82"
-    depends_on:
-      privatebin-init:
-        condition: service_completed_successfully
     environment:
       - SERVICE_FQDN_PRIVATEBIN_8080
       - TZ=${TZ:-UTC}

@@ -7,32 +7,14 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
-  verdaccio-init:
-    image: alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
-    command: ["chown", "-R", "10001:10001", "/verdaccio/storage"]
-    volumes:
-      - verdaccio_storage:/verdaccio/storage
-    network_mode: none
-    read_only: true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - DAC_READ_SEARCH
-    security_opt:
-      - no-new-privileges:true
-    logging: *default-logging
-
   verdaccio:
     image: verdaccio/verdaccio:6.10.4@sha256:43c4067288b050422265407ea2fe747e511fcd0c407a85ec90ab9a326d9400cd
     restart: unless-stopped
     user: "10001:10001"
-    depends_on:
-      verdaccio-init:
-        condition: service_completed_successfully
     environment:
       - VERDACCIO_PORT=4873
       - VERDACCIO_PROTOCOL=http
+      - VERDACCIO_ADDRESS=0.0.0.0
       - VERDACCIO_PUBLIC_URL=${VERDACCIO_PUBLIC_URL:-http://127.0.0.1:4873}
       - TZ=${TZ:-UTC}
     ports:
