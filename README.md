@@ -22,6 +22,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | ntfy | `ntfy/` | 8080 | upstream `binwiederhier/ntfy` (digest-pinned) |
 | LiveKit | `livekit/` | `livekit:7880` (signal) + published `7881` TCP, `7882`/udp (media) | upstream `livekit/livekit-server` (digest-pinned) |
 | Pocket ID | `pocketid/` | `pocket-id:1411` | upstream `ghcr.io/pocket-id/pocket-id` (distroless, digest-pinned) |
+| Verdaccio | `verdaccio/` | `verdaccio:4873` | upstream `verdaccio/verdaccio` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -574,6 +575,39 @@ export POCKETID_ENCRYPTION_KEY=$(openssl rand -base64 32)
 docker compose up -d
 curl -fsS http://127.0.0.1:1411/.well-known/openid-configuration
 # UI needs HTTPS for WebAuthn, the smoke covers the OIDC surface only
+```
+
+---
+
+## Verdaccio
+
+Digest-pinned upstream [Verdaccio](https://www.verdaccio.org/): a lightweight private npm proxy registry with caching. Runs rootless as UID `10001` with a read-only rootfs and all caps dropped. Package storage and `htpasswd` live on the `verdaccio_storage` volume.
+
+The bundled `config/config.yaml` requires authentication for install and publish, allows one self-registration (`max_users: 1`), uses JWT with expiry, and keeps `@local/*` free of the npmjs uplink (dependency confusion guard). Public packages still proxy/cache from `registry.npmjs.org` for authenticated clients.
+
+### First deploy
+
+Point Coolify at `verdaccio` port `4873`. `VERDACCIO_PUBLIC_URL` is built from the service FQDN automatically.
+
+1. Open the UI and register the first user (password must be at least 12 characters)
+2. Set `max_users: -1` in `config/config.yaml` (or remount an override) and redeploy so nobody else can register
+3. Point clients at the registry:
+
+```bash
+npm login --registry https://npm.example.com
+npm publish --registry https://npm.example.com
+# scoped private packages (no public proxy):
+npm publish --registry https://npm.example.com  # package name @local/my-pkg
+```
+
+Optional: change the private scope name in `config/config.yaml` from `@local/*` to your org scope, still without a `proxy` line.
+
+Local smoke:
+
+```bash
+cd verdaccio
+docker compose up -d
+curl -fsS http://127.0.0.1:4873/-/ping
 ```
 
 ---

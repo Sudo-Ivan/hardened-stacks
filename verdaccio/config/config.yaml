@@ -1,0 +1,70 @@
+# Hardened Verdaccio defaults for this stack.
+# Private scope @local/* has no uplink proxy (dependency confusion guard).
+# Self-registration allows one bootstrap user (max_users: 1). Set to -1 after.
+
+storage: /verdaccio/storage/data
+plugins: /verdaccio/plugins
+
+web:
+  title: Verdaccio
+  darkMode: false
+  login: true
+
+auth:
+  htpasswd:
+    file: /verdaccio/storage/htpasswd
+    max_users: 1
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+    maxage: 30m
+    timeout: 30s
+    fail_timeout: 5m
+    max_fails: 5
+    cache: true
+
+packages:
+  "@local/*":
+    access: $authenticated
+    publish: $authenticated
+    unpublish: $authenticated
+
+  "@*/*":
+    access: $authenticated
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+  "**":
+    access: $authenticated
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+server:
+  keepAliveTimeout: 60
+  dotfiles: deny
+  trustProxy: true
+  passwordValidationRegex: "/.{12}$/"
+
+security:
+  api:
+    jwt:
+      sign:
+        expiresIn: 15d
+  web:
+    sign:
+      expiresIn: 1h
+
+middlewares:
+  audit:
+    enabled: true
+
+log:
+  type: stdout
+  format: pretty
+  level: http
+
+i18n:
+  web: en-US

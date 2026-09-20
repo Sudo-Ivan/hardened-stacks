@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  One-click GitHub App creation for the Kaneo integration on
+  todo.quad4.io. Open this file in a browser while logged in to a
+  Quad4-Software org admin account. Submitting creates the app under
+  the org with the permissions and webhook Kaneo needs, then GitHub
+  redirects to https://todo.quad4.io/?code=... - copy that code to
+  whoever runs the conversion step (POST /app-manifests/{code}/conversions)
+  to retrieve the app id, slug, private key, and webhook secret.
+
+  Nothing here is secret. The generated credentials only exist in the
+  conversion response.
+-->
+<html>
+<body>
+<form action="https://github.com/organizations/Quad4-Software/settings/apps/new" method="post">
+  <input type="hidden" name="manifest" value='{
+    "name": "kaneo-quad4",
+    "url": "https://todo.quad4.io",
+    "hook_attributes": {
+      "url": "https://todo.quad4.io/api/github-integration/webhook",
+      "active": true
+    },
+    "redirect_url": "https://todo.quad4.io/",
+    "public": false,
+    "default_permissions": {
+      "issues": "write",
+      "pull_requests": "read",
+      "contents": "read",
+      "metadata": "read"
+    },
+    "default_events": [
+      "issues",
+      "issue_comment",
+      "pull_request",
+      "push"
+    ]
+  }'>
+  <p>This creates the <b>kaneo-quad4</b> GitHub App in the Quad4-Software
+  org with the webhook and permissions the Kaneo integration needs.</p>
+  <button type="submit">Create GitHub App</button>
+</form>
+<script>document.forms[0].submit()</script>
+</body>
+</html>

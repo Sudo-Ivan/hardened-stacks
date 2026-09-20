@@ -21,6 +21,13 @@ services:
       - POSTGRES_PORT=5432
       - DATABASE_URL=postgresql://kaneo:${KANEO_DB_PASSWORD:?}@postgres:5432/kaneo
       - TZ=${TZ:-UTC}
+      # GitHub App integration (optional; unset/empty disables it).
+      # Prefer GITHUB_PRIVATE_KEY_BASE64 over the multi-line PEM var.
+      - GITHUB_APP_ID=${KANEO_GITHUB_APP_ID:-}
+      - GITHUB_APP_NAME=${KANEO_GITHUB_APP_NAME:-}
+      - GITHUB_WEBHOOK_SECRET=${KANEO_GITHUB_WEBHOOK_SECRET:-}
+      - GITHUB_PRIVATE_KEY=${KANEO_GITHUB_PRIVATE_KEY:-}
+      - GITHUB_PRIVATE_KEY_BASE64=${KANEO_GITHUB_PRIVATE_KEY_BASE64:-}
     tmpfs:
       - /tmp:size=128m,mode=1777
       - /var/cache/nginx:size=32m,mode=1777

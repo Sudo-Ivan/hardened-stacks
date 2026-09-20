@@ -1,0 +1,72 @@
+name: verdaccio
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  verdaccio-init:
+    image: alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+    command: ["chown", "-R", "10001:10001", "/verdaccio/storage"]
+    volumes:
+      - verdaccio_storage:/verdaccio/storage
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  verdaccio:
+    image: verdaccio/verdaccio:6.10.1@sha256:fcb86134563534e2f634752e6c6c3edcdb78242ec16578c73ce39d1dadbaa801
+    restart: unless-stopped
+    user: "10001:10001"
+    depends_on:
+      verdaccio-init:
+        condition: service_completed_successfully
+    environment:
+      - SERVICE_FQDN_VERDACCIO_4873
+      - VERDACCIO_PORT=4873
+      - VERDACCIO_PROTOCOL=http
+      - VERDACCIO_PUBLIC_URL=https://${SERVICE_FQDN_VERDACCIO_4873:?}
+      - TZ=${TZ:-UTC}
+    expose:
+      - "4873"
+    volumes:
+      - verdaccio_storage:/verdaccio/storage
+      - ./config/config.yaml:/verdaccio/conf/config.yaml:ro
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    networks:
+      - verdaccio
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:4873/-/ping',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *default-logging
+
+volumes:
+  verdaccio_storage:
+
+networks:
+  verdaccio:
+    driver: bridge

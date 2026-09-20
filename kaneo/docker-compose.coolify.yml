@@ -23,6 +23,14 @@ services:
       - POSTGRES_PORT=5432
       - DATABASE_URL=postgresql://kaneo:${SERVICE_PASSWORD_KANEODB:?}@postgres:5432/kaneo
       - TZ=${TZ:-UTC}
+      # GitHub App integration. Set these in the Coolify service env;
+      # all optional, the feature stays off while they are unset.
+      # GITHUB_PRIVATE_KEY_BASE64 avoids multi-line PEM issues.
+      - GITHUB_APP_ID
+      - GITHUB_APP_NAME
+      - GITHUB_WEBHOOK_SECRET
+      - GITHUB_PRIVATE_KEY
+      - GITHUB_PRIVATE_KEY_BASE64
     tmpfs:
       - /tmp:size=128m,mode=1777
       - /var/cache/nginx:size=32m,mode=1777
