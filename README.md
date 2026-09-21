@@ -26,11 +26,14 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | PrivateBin | `privatebin/` | `privatebin:8080` | upstream `privatebin/nginx-fpm-alpine` (digest-pinned) |
 | Zot | `zot/` | `zot:8080` | upstream `ghcr.io/project-zot/zot` (digest-pinned) |
 | selfh.st/icons | `selfhst-icons/` | `selfhst-icons:4050` | upstream `ghcr.io/selfhst/icons` (digest-pinned) |
+| MiroTalk P2P | `mirotalk/` | `mirotalk:3000` | upstream `mirotalk/p2p` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
 
-Coolify domain entries look like `https://app.example.com:8080` (the `:8080` is only the *container* port for Traefik). Generated `SERVICE_FQDN_*` / `SERVICE_URL_*` values often still include that port. Never bake those into browser-facing URLs unless an entrypoint strips the routing port (Flarum, Forgejo, MediaWiki, cgit, Bugsink, Kaneo, flathub-remote do). Stacks without a stripper require an explicit public URL env (ntfy, Verdaccio, PrivateBin, Pocket ID, Zitadel, OneUptime `HOST`).
+Coolify domain entries look like `https://app.example.com:8080` (the `:8080` is only the *container* port for Traefik). Generated `SERVICE_FQDN_*` / `SERVICE_URL_*` values often still include that port. Never bake those into browser-facing URLs unless an entrypoint strips the routing port (Flarum, Forgejo, MediaWiki, cgit, Bugsink, Kaneo, flathub-remote do). Stacks without a stripper require an explicit public URL env (ntfy, Verdaccio, PrivateBin, Pocket ID, Zitadel, OneUptime `HOST`, MiroTalk `MIROTALK_HOST`).
+
+Agent rules for adding stacks live in [`AGENTS.md`](./AGENTS.md). Quad4 mark assets are under [`branding/`](./branding/) (from [quad4.io/branding](https://quad4.io/branding)).
 
 ---
 
@@ -695,6 +698,8 @@ docker push registry.example.com/library/alpine:3.23
 
 Open the same public URL in a browser for the UI and sign in as `admin`. UI session cookies use a random hash key (re-login after container recreate is expected unless you add a persistent `sessionKeysFile`).
 
+Zot’s web UI embeds its own assets and has **no logo config**. Point Coolify’s resource icon at `branding/mark.svg` (Quad4 mark from [quad4.io/branding](https://quad4.io/branding)). Do not use the lockup/wordmark.
+
 Required local env:
 
 ```bash
@@ -743,6 +748,51 @@ Local smoke:
 cd selfhst-icons
 docker compose up -d
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4050/plex.svg
+```
+
+---
+
+## MiroTalk P2P
+
+Digest-pinned upstream [MiroTalk P2P](https://github.com/miroslavpejic85/mirotalk) ([docs](https://docs.mirotalk.com/mirotalk-p2p/self-hosting/), demo [p2p.mirotalk.com](https://p2p.mirotalk.com)): browser WebRTC peer-to-peer meetings. Runs as UID `1000` with a read-only rootfs and all caps dropped. Survey, Umami stats, Sentry, ChatGPT, and the stock public Metered TURN account are off. STUN stays on. Quad4 mark (`branding/mark.svg`) replaces `logo.svg` / `favicon.svg`.
+
+P2P media is peer-to-peer. For clients behind hard NAT, point `MIROTALK_TURN_*` at your own [coturn](https://github.com/coturn/coturn) (or LiveKit TURN). Do not reuse demo TURN credentials from upstream templates.
+
+### First deploy
+
+Point Coolify at `mirotalk` port `3000` (domain like `https://meet.example.com:3000`). WebRTC needs HTTPS on the public URL.
+
+Required (no port, no trailing slash):
+
+```bash
+MIROTALK_HOST=https://meet.example.com
+```
+
+Coolify generates `SERVICE_PASSWORD_MIROTALKJWT`, `SERVICE_PASSWORD_MIROTALKAPI`, and `SERVICE_PASSWORD_MIROTALKSESSION`. Locally set:
+
+```bash
+MIROTALK_JWT_KEY=...
+MIROTALK_API_KEY_SECRET=...
+MIROTALK_SESSION_SECRET=...
+```
+
+Optional:
+
+```bash
+MIROTALK_HOST_PROTECTED=true
+MIROTALK_TURN_ENABLED=true
+MIROTALK_TURN_URL=turn:turn.example.com:443
+MIROTALK_TURN_USERNAME=...
+MIROTALK_TURN_CREDENTIAL=...
+```
+
+Local smoke:
+
+```bash
+cd mirotalk
+export MIROTALK_JWT_KEY MIROTALK_API_KEY_SECRET MIROTALK_SESSION_SECRET
+docker compose up -d
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 ```
 
 ---

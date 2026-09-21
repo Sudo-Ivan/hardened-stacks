@@ -748,6 +748,37 @@ jobs:
           docker compose logs
           exit 1
 
+  mirotalk-smoke:
+    name: mirotalk compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      MIROTALK_JWT_KEY: ci-mirotalk-jwt-key-32chars-xx
+      MIROTALK_API_KEY_SECRET: ci-mirotalk-api-secret
+      MIROTALK_SESSION_SECRET: ci-mirotalk-session-secret-32c
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke landing and Quad4 logo
+        working-directory: mirotalk
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ || true)
+            if [ "$code" = "200" ]; then
+              curl -fsS http://127.0.0.1:3000/images/logo.svg | grep -q Quad4
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest
