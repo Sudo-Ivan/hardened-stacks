@@ -683,7 +683,9 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/
 
 ## Zot
 
-Digest-pinned Quad4 [zot](https://github.com/Quad4-Software/zot) fork image (`ghcr.io/quad4-software/zot`), cosign keyless signed with SBOM and OpenVEX attestations: an OCI distribution-spec registry with a built-in web UI. Runs as UID `65532` (distroless nonroot) with a read-only rootfs and all caps dropped, plus Landlock filesystem sandboxing inside the container. Image storage is on `zot_data`. Bcrypt `htpasswd` auth (admin only) is written by a one-shot `httpd:alpine` init into `zot_auth`. Config enables search + UI + scrub, Docker client compatibility (`docker2s2`), and deny-by-default anonymous access.
+Digest-pinned Quad4 [zot](https://github.com/Quad4-Software/zot) fork image (`ghcr.io/quad4-software/zot`), cosign keyless signed with SBOM and OpenVEX attestations: an OCI distribution-spec registry with a built-in web UI. Runs as UID `65532` (distroless nonroot) with a read-only rootfs and all caps dropped, plus Landlock filesystem sandboxing inside the container. Image storage is on `zot_data`. Bcrypt `htpasswd` auth (admin only) is written by a one-shot `httpd:alpine` init into `zot_auth`. Config enables search + UI + scrub + metrics, Docker client compatibility (`docker2s2`), deny-by-default anonymous access, API keys for robot accounts, and trivy CVE scanning of stored images.
+
+The admin page (sign in as `admin`) lists repositories and tags with signature trust status, CVE severity counts and OCI labels per tag, shows GC/retention status, and can trigger a GC run. API keys for CI robots are managed under `/user/apikey` in the UI (`zak_...` tokens usable as basic-auth passwords). `/metrics` is Prometheus-exposition but auth-gated to `accessControl.metrics.users` (admin); scrape it with basic auth or an API key.
 
 ### First deploy
 
