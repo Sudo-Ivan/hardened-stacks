@@ -42,7 +42,7 @@ services:
     logging: *default-logging
 
   zot:
-    image: ghcr.io/quad4-software/zot:latest@sha256:8f43d72bd38e0094006fda1b58134afa9800576daa72c757ca3309d4c55d3ff1
+    image: ghcr.io/quad4-software/zot:latest@sha256:308c01b854ed3661f0bea662533a7da87f91a49eabd7a39b7a954aa3da0a7a7a
     restart: unless-stopped
     user: "65532:65532"
     depends_on:
