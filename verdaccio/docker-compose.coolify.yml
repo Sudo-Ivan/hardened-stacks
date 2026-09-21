@@ -16,7 +16,7 @@ services:
       - VERDACCIO_PORT=4873
       - VERDACCIO_PROTOCOL=http
       - VERDACCIO_ADDRESS=0.0.0.0
-      - VERDACCIO_PUBLIC_URL=https://${SERVICE_FQDN_VERDACCIO_4873:?}
+      - VERDACCIO_PUBLIC_URL=${VERDACCIO_PUBLIC_URL:?}
       - TZ=${TZ:-UTC}
     expose:
       - "4873"

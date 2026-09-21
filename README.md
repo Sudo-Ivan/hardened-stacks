@@ -601,7 +601,13 @@ The Coolify compose embeds `config.yaml` via Coolify's `content:` bind so the co
 
 ### First deploy
 
-Point Coolify at `verdaccio` port `4873` (domain like `https://npm.example.com:4873`). `VERDACCIO_PUBLIC_URL` is built from the service FQDN automatically.
+Point Coolify at `verdaccio` port `4873` (domain like `https://npm.example.com:4873`).
+
+Required (no port in the URL — Coolify’s `:4873` suffix must not appear here or the web UI loads forever waiting on closed port assets):
+
+```bash
+VERDACCIO_PUBLIC_URL=https://npm.example.com
+```
 
 Use `docker-compose.coolify.yml`. Auth requires login for install/publish, one bootstrap registration (`max_users: 1`), JWT expiry, and `@local/*` with no npmjs uplink.
 
