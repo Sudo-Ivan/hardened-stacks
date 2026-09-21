@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   zot-init:
-    image: httpd:2.4.65-alpine@sha256:07b2fabb7029a0b8aeb2e0fd02651c28fe22c21c5b5a59d6ff5b022791fcd89e
+    image: docker.io/library/httpd:2.4.65-alpine@sha256:07b2fabb7029a0b8aeb2e0fd02651c28fe22c21c5b5a59d6ff5b022791fcd89e
     restart: "no"
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -42,7 +42,7 @@ services:
     logging: *default-logging
 
   zot:
-    image: ghcr.io/quad4-software/zot:latest@sha256:519e06d51d02ed42bc9aaf3f5dcee2215118f53b4a4f0f6ff6fff372384d9fda
+    image: ghcr.io/quad4-software/zot:latest@sha256:c117ce1440581ff05496b3de62dd2b275c9ec281d3c56abfaf3e8feff2995dd3
     restart: unless-stopped
     user: "65532:65532"
     depends_on:
