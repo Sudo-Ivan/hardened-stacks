@@ -1,0 +1,104 @@
+name: garage
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  garage-init:
+    image: alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
+    restart: "no"
+    exclude_from_hc: true
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        echo "garage-init: preparing meta and data for uid 1000"
+        mkdir -p /meta /data
+        chown -R 1000:1000 /meta /data
+        echo "garage-init: done"
+    volumes:
+      - garage_meta:/meta
+      - garage_data:/data
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  garage:
+    image: docker.io/dxflrs/garage:v2.3.0@sha256:866bd13ed2038ba7e7190e840482bc27234c4afaf77be8cfa439ae088c1e4690
+    restart: unless-stopped
+    user: "1000:1000"
+    depends_on:
+      garage-init:
+        condition: service_completed_successfully
+    command:
+      - /garage
+      - -c
+      - /etc/garage.toml
+      - server
+      - --single-node
+      - --default-bucket
+    environment:
+      - SERVICE_FQDN_GARAGE_3900
+      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET:?}
+      - GARAGE_ADMIN_TOKEN=${SERVICE_PASSWORD_GARAGEADMIN:?}
+      - GARAGE_DEFAULT_BUCKET=${GARAGE_DEFAULT_BUCKET:-default}
+      - GARAGE_DEFAULT_ACCESS_KEY=${GARAGE_ACCESS_KEY:?}
+      - GARAGE_DEFAULT_SECRET_KEY=${GARAGE_SECRET_KEY:?}
+      - TZ=${TZ:-UTC}
+    expose:
+      - "3900"
+      - "3903"
+    volumes:
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+      - type: bind
+        source: ./config/garage.toml
+        target: /etc/garage.toml
+        content: |
+          metadata_dir = "/var/lib/garage/meta"
+          data_dir = "/var/lib/garage/data"
+          db_engine = "sqlite"
+          replication_factor = 1
+          rpc_bind_addr = "[::]:3901"
+          rpc_public_addr = "127.0.0.1:3901"
+          [s3_api]
+          s3_region = "garage"
+          api_bind_addr = "[::]:3900"
+          root_domain = ".s3.garage.localhost"
+          [s3_web]
+          bind_addr = "[::]:3902"
+          root_domain = ".web.garage.localhost"
+          index = "index.html"
+          [admin]
+          api_bind_addr = "[::]:3903"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - garage
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+volumes:
+  garage_meta:
+  garage_data:
+
+networks:
+  garage:
+    driver: bridge

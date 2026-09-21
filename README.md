@@ -26,7 +26,9 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | PrivateBin | `privatebin/` | `privatebin:8080` | upstream `privatebin/nginx-fpm-alpine` (digest-pinned) |
 | Zot | `zot/` | `zot:8080` | upstream `ghcr.io/project-zot/zot` (digest-pinned) |
 | selfh.st/icons | `selfhst-icons/` | `selfhst-icons:4050` | upstream `ghcr.io/selfhst/icons` (digest-pinned) |
-| MiroTalk P2P | `mirotalk/` | `mirotalk:3000` | upstream `mirotalk/p2p` (digest-pinned) |
+| MiroTalk P2P | `mirotalk/` | `mirotalk:3000` + host `3478`/`49160-49200` UDP | upstream `mirotalk/p2p` + `coturn/coturn` (digest-pinned) |
+| Garage | `garage/` | `garage:3900` (S3) | upstream `dxflrs/garage` (digest-pinned) |
+| Pingvin Share X | `pingvin-share-x/` | `pingvin-share-x:3000` | upstream `ghcr.io/smp46/pingvin-share-x` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -805,6 +807,66 @@ Local smoke:
 cd mirotalk
 export COTURN_PASSWORD MIROTALK_JWT_KEY MIROTALK_API_KEY_SECRET MIROTALK_SESSION_SECRET
 export COTURN_EXTERNAL_IP=127.0.0.1 COTURN_REALM=localhost
+docker compose up -d
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
+```
+
+---
+
+## Garage
+
+Digest-pinned upstream [Garage](https://garagehq.deuxfleurs.fr/) v2.3.0 ([quick start](https://garagehq.deuxfleurs.fr/documentation/quick-start/)): lightweight S3-compatible object store (MinIO alternative). Single-node auto layout via `--single-node --default-bucket`. Runs as UID `1000` with a read-only rootfs. Init chowns volumes.
+
+### First deploy
+
+Point Coolify at `garage` port `3900` (S3 API). Optional second domain/service for admin API on `3903`.
+
+Required:
+
+```bash
+GARAGE_RPC_SECRET=$(openssl rand -hex 32)          # must be 64 hex chars
+GARAGE_ACCESS_KEY=GK$(openssl rand -hex 16)        # must start with GK
+GARAGE_SECRET_KEY=$(openssl rand -hex 32)
+GARAGE_DEFAULT_BUCKET=default
+```
+
+Coolify also uses `SERVICE_PASSWORD_GARAGEADMIN` for the admin API token. Locally set `GARAGE_ADMIN_TOKEN`.
+
+S3 clients (awscli, rclone, rss-discovery):
+
+```bash
+AWS_ENDPOINT_URL=https://s3.example.com
+AWS_DEFAULT_REGION=garage
+AWS_ACCESS_KEY_ID=$GARAGE_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY=$GARAGE_SECRET_KEY
+# path-style: aws --endpoint-url ... s3 ls
+```
+
+Local smoke:
+
+```bash
+cd garage
+export GARAGE_RPC_SECRET GARAGE_ADMIN_TOKEN GARAGE_ACCESS_KEY GARAGE_SECRET_KEY
+docker compose up -d
+docker compose exec garage /garage -c /etc/garage.toml status
+```
+
+---
+
+## Pingvin Share X
+
+Digest-pinned [Pingvin Share X](https://github.com/smp46/pingvin-share-x) v1.22.3 (maintained fork of archived Pingvin Share): WeTransfer-style share links with expiry, passwords, and reverse shares. Docs: [installation](https://smp46.github.io/pingvin-share-x/setup/installation/). Image starts as root to create `PUID`/`PGID` 1000 then drops. No `cap_drop`/`read_only` (entrypoint needs them). `no-new-privileges` stays on.
+
+### First deploy
+
+Point Coolify at `pingvin-share-x` port `3000` (domain like `https://share.example.com:3000`). Coolify sets `TRUST_PROXY=true`.
+
+Open the UI and complete first-run admin setup. Optional OIDC against Pocket ID from the admin settings.
+
+Local smoke:
+
+```bash
+cd pingvin-share-x
 docker compose up -d
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 ```

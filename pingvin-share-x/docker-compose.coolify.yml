@@ -1,0 +1,44 @@
+name: pingvin-share-x
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  pingvin-share-x:
+    image: ghcr.io/smp46/pingvin-share-x:v1.22.3@sha256:5a4e5e2252c0e35c3164e5a124cc800044d702d72c3fb03d66dfe79083836b3a
+    restart: unless-stopped
+    environment:
+      - SERVICE_FQDN_PINGVIN_SHARE_X_3000
+      - TRUST_PROXY=true
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-UTC}
+    expose:
+      - "3000"
+    volumes:
+      - pingvin_data:/opt/app/backend/data
+      - pingvin_images:/opt/app/frontend/public/img
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    networks:
+      - pingvin
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    logging: *default-logging
+
+volumes:
+  pingvin_data:
+  pingvin_images:
+
+networks:
+  pingvin:
+    driver: bridge
