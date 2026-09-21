@@ -693,6 +693,61 @@ jobs:
           docker compose logs
           exit 1
 
+  zot-smoke:
+    name: zot compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ZOT_PASSWORD: ci-zot-admin-password-32chars!!
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke registry auth and UI
+        working-directory: zot
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -u "admin:${ZOT_PASSWORD}" http://127.0.0.1:8080/v2/ || true)
+            if [ "$code" = "200" ]; then
+              curl -fsS -o /dev/null http://127.0.0.1:8080/
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
+  selfhst-icons-smoke:
+    name: selfhst-icons compose smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Smoke icon fetch
+        working-directory: selfhst-icons
+        run: |
+          docker compose up -d
+          trap 'docker compose down -v' EXIT
+          for i in $(seq 1 45); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:4050/plex.svg || true)
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
   ravenguard-build:
     name: ravenguard image build
     runs-on: ubuntu-latest

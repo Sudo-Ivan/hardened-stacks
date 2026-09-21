@@ -1,0 +1,46 @@
+name: selfhst-icons
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  selfhst-icons:
+    image: ghcr.io/selfhst/icons:4.0.3@sha256:d4fa8d64d7f16e6740bf70b731bf90208a6e5e71c28115f287c60df44fe892fa
+    restart: unless-stopped
+    user: "65534:65534"
+    environment:
+      - PORT=4050
+      - ICON_SOURCE=${SELFHST_ICON_SOURCE:-remote}
+      - REMOTE_URL=${SELFHST_REMOTE_URL:-https://cdn.jsdelivr.net/gh/selfhst/icons@main}
+      - PRIMARY_COLOR=${SELFHST_PRIMARY_COLOR:-}
+      - LOG_LEVEL=${SELFHST_LOG_LEVEL:-info}
+      - CACHE_TTL=${SELFHST_CACHE_TTL:-3600}
+      - CACHE_SIZE=${SELFHST_CACHE_SIZE:-500}
+      - REMOTE_TIMEOUT=${SELFHST_REMOTE_TIMEOUT:-10}
+      - CORS_ALLOWED_ORIGINS=${SELFHST_CORS_ALLOWED_ORIGINS:-*}
+      - TZ=${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${SELFHST_ICONS_PORT:-4050}:4050"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - selfhst-icons
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging: *default-logging
+
+networks:
+  selfhst-icons:
+    driver: bridge

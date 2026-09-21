@@ -24,6 +24,8 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | Pocket ID | `pocketid/` | `pocket-id:1411` | upstream `ghcr.io/pocket-id/pocket-id` (distroless, digest-pinned) |
 | Verdaccio | `verdaccio/` | `verdaccio:4873` | upstream `verdaccio/verdaccio` (digest-pinned) |
 | PrivateBin | `privatebin/` | `privatebin:8080` | upstream `privatebin/nginx-fpm-alpine` (digest-pinned) |
+| Zot | `zot/` | `zot:8080` | upstream `ghcr.io/project-zot/zot` (digest-pinned) |
+| selfh.st/icons | `selfhst-icons/` | `selfhst-icons:4050` | upstream `ghcr.io/selfhst/icons` (digest-pinned) |
 | RavenGuard | `ravenguard/` | built for Flarum (and standalone smoke) | `ghcr.io/sudo-ivan/hardened-stacks/ravenguard` |
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
@@ -670,6 +672,77 @@ Local smoke:
 cd privatebin
 docker compose up -d
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/
+```
+
+---
+
+## Zot
+
+Digest-pinned upstream [Zot](https://zotregistry.dev/): an OCI distribution-spec registry with a built-in web UI. Runs as UID `10001` with a read-only rootfs and all caps dropped. Image storage is on `zot_data`. Bcrypt `htpasswd` auth (admin only) is written by a one-shot `httpd:alpine` init into `zot_auth`. Config enables search + UI + scrub, Docker client compatibility (`docker2s2`), and deny-by-default anonymous access.
+
+### First deploy
+
+Point Coolify at `zot` port `8080` (domain like `https://registry.example.com:8080`). Use `docker-compose.coolify.yml` so `config.json` is embedded via Coolify `content:`.
+
+Coolify generates `SERVICE_PASSWORD_ZOTADMIN` for the `admin` htpasswd user. After deploy:
+
+```bash
+docker login registry.example.com -u admin
+# push / pull as usual
+docker tag alpine:3.23 registry.example.com/library/alpine:3.23
+docker push registry.example.com/library/alpine:3.23
+```
+
+Open the same public URL in a browser for the UI and sign in as `admin`. UI session cookies use a random hash key (re-login after container recreate is expected unless you add a persistent `sessionKeysFile`).
+
+Required local env:
+
+```bash
+ZOT_PASSWORD=choose-a-strong-password
+```
+
+Local smoke:
+
+```bash
+cd zot
+export ZOT_PASSWORD=choose-a-strong-password
+docker compose up -d
+curl -fsS -u "admin:${ZOT_PASSWORD}" http://127.0.0.1:8080/v2/
+```
+
+---
+
+## selfh.st/icons
+
+Digest-pinned upstream [selfhst/icons](https://github.com/selfhst/icons): a small proxy that serves and recolors [selfh.st/icons](https://selfh.st/icons) assets. Runs as UID `65534` with a read-only rootfs and all caps dropped. Default `ICON_SOURCE=remote` pulls from jsDelivr (no icon volume needed). Healthcheck uses `/server -healthcheck` as documented.
+
+### First deploy
+
+Point Coolify at `selfhst-icons` port `4050` (domain like `https://icons.example.com:4050`).
+
+Optional env (defaults match the [project wiki](https://github.com/selfhst/icons/wiki)):
+
+```bash
+SELFHST_PRIMARY_COLOR=0f60d9          # global recolor hex without #
+SELFHST_CORS_ALLOWED_ORIGINS=*         # or https://dashboard.example.com
+SELFHST_REMOTE_URL=https://cdn.jsdelivr.net/gh/selfhst/icons@main
+```
+
+URL conventions after deploy:
+
+| Use | Path |
+|-----|------|
+| WebP (default) | `/plex` |
+| SVG / PNG | `/plex.svg`, `/plex.png` |
+| Custom color | `/plex/0f60d9` or `/plex?color=0f60d9` |
+| Primary color | `/plex/primary` (needs `SELFHST_PRIMARY_COLOR`) |
+
+Local smoke:
+
+```bash
+cd selfhst-icons
+docker compose up -d
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4050/plex.svg
 ```
 
 ---
