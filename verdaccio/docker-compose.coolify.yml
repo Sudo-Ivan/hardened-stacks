@@ -33,6 +33,7 @@ services:
             title: Verdaccio
             darkMode: false
             login: true
+            showVersion: false
 
           auth:
             htpasswd:
@@ -70,7 +71,7 @@ services:
             keepAliveTimeout: 60
             dotfiles: deny
             trustProxy: true
-            passwordValidationRegex: "/.{12}$$/"
+            passwordValidationRegex: "^.{12,}$$"
 
           security:
             api:

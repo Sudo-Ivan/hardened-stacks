@@ -9,6 +9,7 @@ web:
   title: Verdaccio
   darkMode: false
   login: true
+  showVersion: false
 
 auth:
   htpasswd:
@@ -46,7 +47,7 @@ server:
   keepAliveTimeout: 60
   dotfiles: deny
   trustProxy: true
-  passwordValidationRegex: "/.{12}$/"
+  passwordValidationRegex: "^.{12,}$"
 
 security:
   api:
