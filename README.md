@@ -24,7 +24,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | Pocket ID | `pocketid/` | `pocket-id:1411` | upstream `ghcr.io/pocket-id/pocket-id` (distroless, digest-pinned) |
 | Verdaccio | `verdaccio/` | `verdaccio:4873` | upstream `verdaccio/verdaccio` (digest-pinned) |
 | PrivateBin | `privatebin/` | `privatebin:8080` | upstream `privatebin/nginx-fpm-alpine` (digest-pinned) |
-| Zot | `zot/` | `zot:8080` | upstream `ghcr.io/project-zot/zot` (digest-pinned) |
+| Zot | `zot/` | `zot:8080` | Quad4 fork `ghcr.io/quad4-software/zot` (digest-pinned, cosign keyless signed) |
 | selfh.st/icons | `selfhst-icons/` | `selfhst-icons:4050` | upstream `ghcr.io/selfhst/icons` (digest-pinned) |
 | MiroTalk P2P | `mirotalk/` | `mirotalk:3000` + host `3478`/`49160-49200` UDP | upstream `mirotalk/p2p` + `coturn/coturn` (digest-pinned) |
 | Garage | `garage/` | `garage:3900` (S3) | upstream `dxflrs/garage` (digest-pinned) |
@@ -683,7 +683,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/
 
 ## Zot
 
-Digest-pinned upstream [Zot](https://zotregistry.dev/): an OCI distribution-spec registry with a built-in web UI. Runs as UID `10001` with a read-only rootfs and all caps dropped. Image storage is on `zot_data`. Bcrypt `htpasswd` auth (admin only) is written by a one-shot `httpd:alpine` init into `zot_auth`. Config enables search + UI + scrub, Docker client compatibility (`docker2s2`), and deny-by-default anonymous access.
+Digest-pinned Quad4 [zot](https://github.com/Quad4-Software/zot) fork image (`ghcr.io/quad4-software/zot`), cosign keyless signed with SBOM and OpenVEX attestations: an OCI distribution-spec registry with a built-in web UI. Runs as UID `65532` (distroless nonroot) with a read-only rootfs and all caps dropped, plus Landlock filesystem sandboxing inside the container. Image storage is on `zot_data`. Bcrypt `htpasswd` auth (admin only) is written by a one-shot `httpd:alpine` init into `zot_auth`. Config enables search + UI + scrub, Docker client compatibility (`docker2s2`), and deny-by-default anonymous access.
 
 ### First deploy
 
@@ -700,7 +700,7 @@ docker push registry.example.com/library/alpine:3.23
 
 Open the same public URL in a browser for the UI and sign in as `admin`. UI session cookies use a random hash key (re-login after container recreate is expected unless you add a persistent `sessionKeysFile`).
 
-Zot’s web UI embeds its own assets and has **no logo config**. Point Coolify’s resource icon at `branding/mark.svg` (Quad4 mark from [quad4.io/branding](https://quad4.io/branding)). Do not use the lockup/wordmark.
+The Quad4 fork already ships the Quad4 mark in the UI. Coolify’s resource icon can still point at `branding/mark.svg`.
 
 ### Public (anonymous) pulls
 

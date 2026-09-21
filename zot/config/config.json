@@ -57,5 +57,6 @@
       "enable": true,
       "interval": "24h"
     }
-  }
+  },
+  "landlock": true
 }

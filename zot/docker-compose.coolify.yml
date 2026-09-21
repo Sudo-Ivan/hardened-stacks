@@ -19,8 +19,8 @@ services:
         htpasswd -bnB admin "${ZOT_PASSWORD:?}" > /auth/htpasswd
         chmod 644 /auth/htpasswd
         mkdir -p /data
-        echo "zot-init: chown data and auth to 10001"
-        chown -R 10001:10001 /data /auth
+        echo "zot-init: chown data and auth to 65532"
+        chown -R 65532:65532 /data /auth
         echo "zot-init: done"
     environment:
       - ZOT_PASSWORD=${SERVICE_PASSWORD_ZOTADMIN:?}
@@ -43,9 +43,9 @@ services:
     logging: *default-logging
 
   zot:
-    image: ghcr.io/project-zot/zot:v2.1.21@sha256:6b69512c00dceaad05b1144e6079aac6aa7309d7fd200f9947ecb1de09cf48c8
+    image: ghcr.io/quad4-software/zot:latest@sha256:519e06d51d02ed42bc9aaf3f5dcee2215118f53b4a4f0f6ff6fff372384d9fda
     restart: unless-stopped
-    user: "10001:10001"
+    user: "65532:65532"
     depends_on:
       zot-init:
         condition: service_completed_successfully
@@ -121,7 +121,8 @@ services:
                 "enable": true,
                 "interval": "24h"
               }
-            }
+            },
+            "landlock": true
           }
     tmpfs:
       - /tmp:size=256m,mode=1777
