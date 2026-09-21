@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   verdaccio:
-    image: verdaccio/verdaccio:6.10.4@sha256:43c4067288b050422265407ea2fe747e511fcd0c407a85ec90ab9a326d9400cd
+    image: ghcr.io/quad4-software/verdaccio:nightly-master@sha256:d778921c691ae2fdde781e2f7b4222a9ccf93159d7d640dc60df41794ef7c765
     restart: unless-stopped
     user: "10001:10001"
     environment:

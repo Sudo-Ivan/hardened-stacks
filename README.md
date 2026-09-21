@@ -22,7 +22,7 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 | ntfy | `ntfy/` | 8080 | upstream `binwiederhier/ntfy` (digest-pinned) |
 | LiveKit | `livekit/` | `livekit:7880` (signal) + published `7881` TCP, `7882`/udp (media) | upstream `livekit/livekit-server` (digest-pinned) |
 | Pocket ID | `pocketid/` | `pocket-id:1411` | upstream `ghcr.io/pocket-id/pocket-id` (distroless, digest-pinned) |
-| Verdaccio | `verdaccio/` | `verdaccio:4873` | upstream `verdaccio/verdaccio` (digest-pinned) |
+| Verdaccio | `verdaccio/` | `verdaccio:4873` | Quad4 fork `ghcr.io/quad4-software/verdaccio` (digest-pinned, cosign keyless signed) |
 | PrivateBin | `privatebin/` | `privatebin:8080` | upstream `privatebin/nginx-fpm-alpine` (digest-pinned) |
 | Zot | `zot/` | `zot:8080` | Quad4 fork `ghcr.io/quad4-software/zot` (digest-pinned, cosign keyless signed) |
 | selfh.st/icons | `selfhst-icons/` | `selfhst-icons:4050` | upstream `ghcr.io/selfhst/icons` (digest-pinned) |
@@ -610,7 +610,7 @@ curl -fsS http://127.0.0.1:1411/.well-known/openid-configuration
 
 ## Verdaccio
 
-Digest-pinned upstream [Verdaccio](https://www.verdaccio.org/): a lightweight private npm proxy registry with caching. Runs rootless as UID `10001` with a read-only rootfs and all caps dropped. Package storage and `htpasswd` live on the `verdaccio_storage` volume (seeded from the image, no init container).
+Digest-pinned Quad4-Software [Verdaccio fork](https://github.com/Quad4-Software/verdaccio) (`ghcr.io/quad4-software/verdaccio:nightly-master`, pinned at the multi-arch index): a lightweight private npm proxy registry with caching. The fork adds TOTP 2FA, OIDC/SSO, scoped tokens, trusted publishing for GitHub Actions and GitLab CI, an admin panel, package visibility controls, and RSS feeds on top of upstream Verdaccio. Runs rootless as UID `10001` with a read-only rootfs and all caps dropped. Package storage and `htpasswd` live on the `verdaccio_storage` volume (seeded from the image, no init container).
 
 The Coolify compose embeds `config.yaml` via Coolify's `content:` bind so the config exists even for Docker Compose Empty. A plain `./config/...` mount without the file creates a directory and breaks the start.
 
@@ -624,7 +624,7 @@ Required (no port in the URL — Coolify’s `:4873` suffix must not appear here
 VERDACCIO_PUBLIC_URL=https://npm.example.com
 ```
 
-Use `docker-compose.coolify.yml`. Auth requires login for install/publish, one bootstrap registration (`max_users: 1`), JWT expiry, and `@local/*` with no npmjs uplink.
+Use `docker-compose.coolify.yml`. Auth requires login for install/publish, one bootstrap registration (`max_users: 1`), JWT expiry, and `@local/*` with no npmjs uplink. On a fresh volume the server also logs a one-time admin setup link (`/-/web/setup#...`, expires after 24h) that creates the first account without opening registration.
 
 If a previous deploy left a root-owned empty volume (from a failed init), delete the `verdaccio_storage` volume once in Coolify before redeploying so Docker can seed ownership from the image.
 
