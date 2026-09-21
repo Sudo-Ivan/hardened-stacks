@@ -29,7 +29,7 @@ services:
 
           [main]
           name = "Paste"
-          basepath = "https://${SERVICE_FQDN_PRIVATEBIN_8080}/"
+          basepath = "${PRIVATEBIN_PUBLIC_URL:?}/"
           discussion = false
           opendiscussion = false
           password = true

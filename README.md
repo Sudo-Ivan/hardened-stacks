@@ -28,6 +28,8 @@ Images are digest-pinned where possible, scanned with Trivy, signed with Cosign 
 
 Point your Coolify domain at the service port above. Coolify terminates HTTPS on the public URL.
 
+Coolify domain entries look like `https://app.example.com:8080` (the `:8080` is only the *container* port for Traefik). Generated `SERVICE_FQDN_*` / `SERVICE_URL_*` values often still include that port. Never bake those into browser-facing URLs unless an entrypoint strips the routing port (Flarum, Forgejo, MediaWiki, cgit, Bugsink, Kaneo, flathub-remote do). Stacks without a stripper require an explicit public URL env (ntfy, Verdaccio, PrivateBin, Pocket ID, Zitadel, OneUptime `HOST`).
+
 ---
 
 ## Flarum
@@ -444,8 +446,14 @@ Hardened Coolify compose for [Zitadel](https://github.com/zitadel/zitadel) v4 wi
 
 Zitadel v4 splits the login UI onto its own service and path. In Coolify, set **two** domain entries on this one compose app:
 
-- `zitadel-api` -> `https://auth.example.com`
+- `zitadel-api` -> `https://auth.example.com:8080`
 - `zitadel-login` -> `https://auth.example.com/ui/v2/login` (path prefix, same host)
+
+Required (hostname only, no scheme, no port — Coolify’s `:8080` FQDN must not be used here):
+
+```bash
+ZITADEL_EXTERNALDOMAIN=auth.example.com
+```
 
 Coolify provides:
 
@@ -645,6 +653,12 @@ Public-ready defaults in `config/conf.php`: discussions and uploads off, burn-af
 ### First deploy
 
 Point Coolify at `privatebin` port `8080` (domain like `https://paste.example.com:8080`). Use `docker-compose.coolify.yml` so `conf.php` is embedded via Coolify `content:`.
+
+Required (no port, no trailing slash — Coolify’s `:8080` FQDN must not appear in `basepath`):
+
+```bash
+PRIVATEBIN_PUBLIC_URL=https://paste.example.com
+```
 
 HTTPS is required for a trustworthy instance (Coolify terminates TLS). Share links include the decryption key in the URL fragment (`#...`). Use a paste password for anything sensitive.
 
