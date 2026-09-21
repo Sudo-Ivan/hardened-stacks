@@ -7,10 +7,79 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
+  coturn:
+    image: docker.io/coturn/coturn:latest@sha256:59af4221a2c45c1195a1a4a865542b3ea744be1dd8e228d11bde87c6631081cf
+    restart: unless-stopped
+    user: "65534:65534"
+    environment:
+      - TZ=${TZ:-UTC}
+    command:
+      - -c
+      - /etc/coturn/turnserver.conf
+      - --log-file=stdout
+      - --realm=${COTURN_REALM:?}
+      - --server-name=${COTURN_REALM:?}
+      - --user=mirotalk:${SERVICE_PASSWORD_COTURN:?}
+      - --external-ip=${COTURN_EXTERNAL_IP:?}
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "49160-49200:49160-49200/udp"
+    volumes:
+      - type: bind
+        source: ./config/turnserver.conf
+        target: /etc/coturn/turnserver.conf
+        content: |
+          listening-port=3478
+          fingerprint
+          lt-cred-mech
+          no-cli
+          no-tls
+          no-dtls
+          no-multicast-peers
+          no-loopback-peers
+          no-software-attribute
+          simple-log
+          log-file=stdout
+          min-port=49160
+          max-port=49200
+          total-quota=100
+          user-quota=10
+          stale-nonce=600
+          denied-peer-ip=0.0.0.0-0.255.255.255
+          denied-peer-ip=10.0.0.0-10.255.255.255
+          denied-peer-ip=100.64.0.0-100.127.255.255
+          denied-peer-ip=127.0.0.0-127.255.255.255
+          denied-peer-ip=169.254.0.0-169.254.255.255
+          denied-peer-ip=172.16.0.0-172.31.255.255
+          denied-peer-ip=192.0.0.0-192.0.0.255
+          denied-peer-ip=192.0.2.0-192.0.2.255
+          denied-peer-ip=192.168.0.0-192.168.255.255
+          denied-peer-ip=198.18.0.0-198.19.255.255
+          denied-peer-ip=198.51.100.0-198.51.100.255
+          denied-peer-ip=203.0.113.0-203.0.113.255
+          denied-peer-ip=224.0.0.0-239.255.255.255
+          denied-peer-ip=240.0.0.0-255.255.255.255
+          denied-peer-ip=::1
+          denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+          denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /var/tmp:size=16m,mode=1777
+      - /var/lib/coturn:size=16m,mode=1777
+    networks:
+      - mirotalk
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
   mirotalk:
     image: docker.io/mirotalk/p2p:latest@sha256:6bfe767026f6666d21e22988064776f1386282fc50660198cb5c3273bdb5d35f
     restart: unless-stopped
     user: "1000:1000"
+    depends_on:
+      - coturn
     environment:
       - SERVICE_FQDN_MIROTALK_3000
       - NODE_ENV=production
@@ -34,11 +103,11 @@ services:
       - HOST_PROTECTED=${MIROTALK_HOST_PROTECTED:-false}
       - HOST_USER_AUTH=${MIROTALK_HOST_USER_AUTH:-false}
       - STUN_SERVER_ENABLED=true
-      - STUN_SERVER_URL=${MIROTALK_STUN_URL:-stun:stun.l.google.com:19302}
-      - TURN_SERVER_ENABLED=${MIROTALK_TURN_ENABLED:-false}
-      - TURN_SERVER_URL=${MIROTALK_TURN_URL:-}
-      - TURN_SERVER_USERNAME=${MIROTALK_TURN_USERNAME:-}
-      - TURN_SERVER_CREDENTIAL=${MIROTALK_TURN_CREDENTIAL:-}
+      - STUN_SERVER_URL=${MIROTALK_STUN_URL:-stun:${COTURN_REALM:?}:3478}
+      - TURN_SERVER_ENABLED=true
+      - TURN_SERVER_URL=${MIROTALK_TURN_URL:?}
+      - TURN_SERVER_USERNAME=mirotalk
+      - TURN_SERVER_CREDENTIAL=${SERVICE_PASSWORD_COTURN:?}
       - JWT_KEY=${SERVICE_PASSWORD_MIROTALKJWT:?}
       - API_KEY_SECRET=${SERVICE_PASSWORD_MIROTALKAPI:?}
       - SESSION_SECRET=${SERVICE_PASSWORD_MIROTALKSESSION:?}

@@ -90,3 +90,5 @@ Rules:
 | Verdaccio / ntfy UI hangs or wrong links | Public URL env had Coolify `:port`. Strip or set clean URL |
 | Coolify config bind empty | Use `content:` in `docker-compose.coolify.yml` |
 | Guessed UID / healthcheck binary | Inspect image `User`, `Entrypoint`, and what tools exist |
+| Coturn `cap_drop: ALL` → `turnserver: Operation not permitted` | Coturn needs default caps. Keep `read_only` + `no-new-privileges`, skip `cap_drop` |
+| Coturn / LiveKit media behind Traefik | Publish UDP/TCP on the host. Proxy cannot carry TURN/WebRTC media |

@@ -7,10 +7,43 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
+  coturn:
+    image: docker.io/coturn/coturn:latest@sha256:59af4221a2c45c1195a1a4a865542b3ea744be1dd8e228d11bde87c6631081cf
+    restart: unless-stopped
+    user: "65534:65534"
+    environment:
+      - TZ=${TZ:-UTC}
+    command:
+      - -c
+      - /etc/coturn/turnserver.conf
+      - --log-file=stdout
+      - --realm=${COTURN_REALM:-localhost}
+      - --server-name=${COTURN_REALM:-localhost}
+      - --user=mirotalk:${COTURN_PASSWORD:?}
+      - --external-ip=${COTURN_EXTERNAL_IP:?}
+    ports:
+      - "${COTURN_BIND_IP:-0.0.0.0}:3478:3478"
+      - "${COTURN_BIND_IP:-0.0.0.0}:3478:3478/udp"
+      - "${COTURN_BIND_IP:-0.0.0.0}:49160-49200:49160-49200/udp"
+    volumes:
+      - ./config/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /var/tmp:size=16m,mode=1777
+      - /var/lib/coturn:size=16m,mode=1777
+    networks:
+      - mirotalk
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
   mirotalk:
     image: docker.io/mirotalk/p2p:latest@sha256:6bfe767026f6666d21e22988064776f1386282fc50660198cb5c3273bdb5d35f
     restart: unless-stopped
     user: "1000:1000"
+    depends_on:
+      - coturn
     environment:
       - NODE_ENV=production
       - HOST=${MIROTALK_HOST:-http://127.0.0.1:3000}
@@ -33,11 +66,11 @@ services:
       - HOST_PROTECTED=${MIROTALK_HOST_PROTECTED:-false}
       - HOST_USER_AUTH=${MIROTALK_HOST_USER_AUTH:-false}
       - STUN_SERVER_ENABLED=true
-      - STUN_SERVER_URL=${MIROTALK_STUN_URL:-stun:stun.l.google.com:19302}
-      - TURN_SERVER_ENABLED=${MIROTALK_TURN_ENABLED:-false}
-      - TURN_SERVER_URL=${MIROTALK_TURN_URL:-}
-      - TURN_SERVER_USERNAME=${MIROTALK_TURN_USERNAME:-}
-      - TURN_SERVER_CREDENTIAL=${MIROTALK_TURN_CREDENTIAL:-}
+      - STUN_SERVER_URL=${MIROTALK_STUN_URL:-stun:127.0.0.1:3478}
+      - TURN_SERVER_ENABLED=true
+      - TURN_SERVER_URL=${MIROTALK_TURN_URL:-turn:127.0.0.1:3478}
+      - TURN_SERVER_USERNAME=mirotalk
+      - TURN_SERVER_CREDENTIAL=${COTURN_PASSWORD:?}
       - JWT_KEY=${MIROTALK_JWT_KEY:?}
       - API_KEY_SECRET=${MIROTALK_API_KEY_SECRET:?}
       - SESSION_SECRET=${MIROTALK_SESSION_SECRET:?}

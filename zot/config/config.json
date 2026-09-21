@@ -20,6 +20,10 @@
     },
     "accessControl": {
       "repositories": {
+        "public/**": {
+          "anonymousPolicy": ["read"],
+          "defaultPolicy": ["read"]
+        },
         "**": {
           "defaultPolicy": ["read", "create", "update", "delete"]
         }

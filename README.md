@@ -700,6 +700,21 @@ Open the same public URL in a browser for the UI and sign in as `admin`. UI sess
 
 Zot’s web UI embeds its own assets and has **no logo config**. Point Coolify’s resource icon at `branding/mark.svg` (Quad4 mark from [quad4.io/branding](https://quad4.io/branding)). Do not use the lockup/wordmark.
 
+### Public (anonymous) pulls
+
+Repos under the `public/` prefix allow anonymous **read**. Everything else stays auth-only. Pushing to `public/...` still needs `admin` (via `adminPolicy`).
+
+```bash
+# after login as admin
+docker push registry.example.com/public/app:1.0
+# anon / podman / skopeo can pull without credentials
+podman pull registry.example.com/public/app:1.0
+```
+
+Paths must not start with `/` in config (`public/**`, not `/public/**`). Longest match wins ([zot authz docs](https://zotregistry.dev/v2.1.21/articles/authn-authz/)).
+
+**Docker CLI caveat:** with mixed anon + auth policies and htpasswd, plain `docker pull` of a public image often fails until you `docker login` once, because Docker treats a `401` on `/v2/` as “need credentials for everything”. Podman and skopeo handle per-repo challenges correctly. Details: [Using Docker with zot](https://zotregistry.dev/v2.1.21/articles/docker/).
+
 Required local env:
 
 ```bash
@@ -754,43 +769,42 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4050/plex.svg
 
 ## MiroTalk P2P
 
-Digest-pinned upstream [MiroTalk P2P](https://github.com/miroslavpejic85/mirotalk) ([docs](https://docs.mirotalk.com/mirotalk-p2p/self-hosting/), demo [p2p.mirotalk.com](https://p2p.mirotalk.com)): browser WebRTC peer-to-peer meetings. Runs as UID `1000` with a read-only rootfs and all caps dropped. Survey, Umami stats, Sentry, ChatGPT, and the stock public Metered TURN account are off. STUN stays on. Quad4 mark (`branding/mark.svg`) replaces `logo.svg` / `favicon.svg`.
+Digest-pinned upstream [MiroTalk P2P](https://github.com/miroslavpejic85/mirotalk) ([docs](https://docs.mirotalk.com/mirotalk-p2p/self-hosting/), demo [p2p.mirotalk.com](https://p2p.mirotalk.com)) plus [coturn](https://docs.mirotalk.com/coturn/installation/) in the same compose. MiroTalk runs as UID `1000`, coturn as UID `65534`, both read-only rootfs with caps dropped. Survey, Umami, Sentry, ChatGPT, and demo Metered TURN are off. Quad4 mark replaces `logo.svg` / `favicon.svg`.
 
-P2P media is peer-to-peer. For clients behind hard NAT, point `MIROTALK_TURN_*` at your own [coturn](https://github.com/coturn/coturn) (or LiveKit TURN). Do not reuse demo TURN credentials from upstream templates.
+Browsers need a **public** TURN URL (not the Docker service name). Coturn publishes `3478` TCP/UDP and relay UDP `49160-49200` on the host (same pattern as LiveKit media ports). Traefik cannot proxy TURN.
 
 ### First deploy
 
-Point Coolify at `mirotalk` port `3000` (domain like `https://meet.example.com:3000`). WebRTC needs HTTPS on the public URL.
+Point Coolify at `mirotalk` port `3000` (domain like `https://meet.example.com:3000`). Open firewall for `3478/tcp`, `3478/udp`, and `49160-49200/udp` on the host.
 
-Required (no port, no trailing slash):
+Required (no port on `MIROTALK_HOST`):
 
 ```bash
 MIROTALK_HOST=https://meet.example.com
+MIROTALK_TURN_URL=turn:turn.example.com:3478   # DNS A record to the Coolify host
+COTURN_REALM=turn.example.com
+COTURN_EXTERNAL_IP=203.0.113.10                 # server public IPv4
 ```
 
-Coolify generates `SERVICE_PASSWORD_MIROTALKJWT`, `SERVICE_PASSWORD_MIROTALKAPI`, and `SERVICE_PASSWORD_MIROTALKSESSION`. Locally set:
+Coolify generates `SERVICE_PASSWORD_COTURN` (TURN user `mirotalk`), plus JWT/API/session secrets. Locally:
 
 ```bash
+COTURN_PASSWORD=...
 MIROTALK_JWT_KEY=...
 MIROTALK_API_KEY_SECRET=...
 MIROTALK_SESSION_SECRET=...
+COTURN_EXTERNAL_IP=127.0.0.1
+COTURN_REALM=localhost
 ```
 
-Optional:
-
-```bash
-MIROTALK_HOST_PROTECTED=true
-MIROTALK_TURN_ENABLED=true
-MIROTALK_TURN_URL=turn:turn.example.com:443
-MIROTALK_TURN_USERNAME=...
-MIROTALK_TURN_CREDENTIAL=...
-```
+Optional TLS TURN (`turns:` / 5349) needs cert mounts. Prefer plain `turn:` on 3478 unless a network blocks it ([MiroTalk coturn notes](https://docs.mirotalk.com/coturn/installation/)).
 
 Local smoke:
 
 ```bash
 cd mirotalk
-export MIROTALK_JWT_KEY MIROTALK_API_KEY_SECRET MIROTALK_SESSION_SECRET
+export COTURN_PASSWORD MIROTALK_JWT_KEY MIROTALK_API_KEY_SECRET MIROTALK_SESSION_SECRET
+export COTURN_EXTERNAL_IP=127.0.0.1 COTURN_REALM=localhost
 docker compose up -d
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 ```

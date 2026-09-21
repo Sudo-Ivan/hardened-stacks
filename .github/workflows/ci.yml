@@ -757,13 +757,16 @@ jobs:
       MIROTALK_JWT_KEY: ci-mirotalk-jwt-key-32chars-xx
       MIROTALK_API_KEY_SECRET: ci-mirotalk-api-secret
       MIROTALK_SESSION_SECRET: ci-mirotalk-session-secret-32c
+      COTURN_PASSWORD: ci-coturn-password
+      COTURN_EXTERNAL_IP: 127.0.0.1
+      COTURN_REALM: localhost
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Smoke landing and Quad4 logo
+      - name: Smoke landing, Quad4 logo, TURN enabled
         working-directory: mirotalk
         run: |
           docker compose up -d
@@ -772,6 +775,7 @@ jobs:
             code=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ || true)
             if [ "$code" = "200" ]; then
               curl -fsS http://127.0.0.1:3000/images/logo.svg | grep -q Quad4
+              docker compose logs mirotalk | grep -q "turn_enabled: true"
               exit 0
             fi
             sleep 3
