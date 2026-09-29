@@ -55,7 +55,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/flarum
       context: .
@@ -74,7 +74,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/mediawiki
       context: mediawiki
@@ -92,7 +92,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/copyparty
       context: copyparty
@@ -110,7 +110,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/forgejo
       context: forgejo
@@ -128,7 +128,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/flathub-remote
       context: flathub-remote
@@ -146,7 +146,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/cgit
       context: cgit
@@ -164,7 +164,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/bugpin
       context: bugpin
@@ -182,7 +182,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/bugsink
       context: bugsink
@@ -200,7 +200,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/kaneo
       context: kaneo
@@ -218,7 +218,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: ./.github/workflows/reusable-publish-image.yml
+    uses: $/.github/workflows/reusable-publish-image.yml
     with:
       image_name: sudo-ivan/hardened-stacks/ravenguard
       context: ravenguard
