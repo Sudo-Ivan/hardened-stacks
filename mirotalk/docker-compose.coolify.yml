@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   coturn:
-    image: docker.io/coturn/coturn:latest@sha256:59af4221a2c45c1195a1a4a865542b3ea744be1dd8e228d11bde87c6631081cf
+    image: docker.io/coturn/coturn:latest@sha256:bbefd3e1fdfdc0d58770fe01b581fd8b00d9f3a5580d00acb77cf719a6bc78e3
     restart: unless-stopped
     user: "65534:65534"
     environment:
@@ -75,7 +75,7 @@ services:
     logging: *default-logging
 
   mirotalk:
-    image: docker.io/mirotalk/p2p:latest@sha256:6bfe767026f6666d21e22988064776f1386282fc50660198cb5c3273bdb5d35f
+    image: docker.io/mirotalk/p2p:latest@sha256:eb1260fb4214817553e2026506f8929fc666395787608d0ac96943d296e6fa85
     restart: unless-stopped
     user: "1000:1000"
     depends_on:

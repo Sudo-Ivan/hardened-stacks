@@ -1,6 +1,6 @@
 services:
   mcaptcha:
-    image: mcaptcha/mcaptcha:latest
+    image: mcaptcha/mcaptcha:latest@sha256:e94486fe8ae2549977d4245fd48c0cf53ea03092b8412bc283e8dd1c3ca27717
     restart: unless-stopped
     expose:
       - "7000"
@@ -16,7 +16,7 @@ services:
         condition: service_started
 
   mcaptcha_postgres:
-    image: postgres:16-bookworm@sha256:92620daddcd947f8d5ab5ba66e848702fe443d87fed30c4cea8e389fd78dfc55
+    image: postgres:16-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67
     restart: unless-stopped
     environment:
       - POSTGRES_USER=mcaptcha
@@ -32,7 +32,7 @@ services:
       start_period: 30s
 
   mcaptcha_redis:
-    image: mcaptcha/cache:latest
+    image: mcaptcha/cache:latest@sha256:56cb11d8cffb04c00dc6008c08d795a61cdacaab388cababa3c52cfc2ec6cc7a
     restart: unless-stopped
 
 volumes:

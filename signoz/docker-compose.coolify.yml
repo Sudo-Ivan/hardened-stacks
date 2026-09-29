@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:16-bookworm@sha256:bb3e1a57e5407e0a5280b4211980a5e537f4abd234a87014ac979849a78dd825
+    image: postgres:16-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67
     restart: unless-stopped
     environment:
       - POSTGRES_USER=signoz
@@ -131,7 +131,7 @@ services:
     logging: *default-logging
 
   migrator:
-    image: signoz/signoz-otel-collector:v0.144.9@sha256:72aa1e4c1ec529f178e962c049be35cfd7abae02fe9a397edad10b4a9cba62fa
+    image: signoz/signoz-otel-collector:v0.144.12@sha256:deb566a7a3c0ba544ee58ccc92ee1f0e6da827bc40383e52f3c824705e100a3d
     restart: on-failure
     depends_on:
       clickhouse:
@@ -158,7 +158,7 @@ services:
     logging: *default-logging
 
   signoz:
-    image: signoz/signoz:v0.141.1@sha256:c10fa03e103c76bba2d67452bd26925f08a69f2a7b8d0f7982cea0e4f81ce88e
+    image: signoz/signoz:v0.143.0@sha256:7da6b9c07db100cfcf7949966211b16543e3d6828df31f0f7a24110d734a811c
     restart: unless-stopped
     depends_on:
       postgres:
@@ -196,7 +196,7 @@ services:
     logging: *default-logging
 
   otel-collector:
-    image: signoz/signoz-otel-collector:v0.144.9@sha256:72aa1e4c1ec529f178e962c049be35cfd7abae02fe9a397edad10b4a9cba62fa
+    image: signoz/signoz-otel-collector:v0.144.12@sha256:deb566a7a3c0ba544ee58ccc92ee1f0e6da827bc40383e52f3c824705e100a3d
     restart: unless-stopped
     depends_on:
       clickhouse:

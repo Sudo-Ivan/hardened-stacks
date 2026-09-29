@@ -696,8 +696,8 @@ Coolify generates `SERVICE_PASSWORD_ZOTADMIN` for the `admin` htpasswd user. Aft
 ```bash
 docker login registry.example.com -u admin
 # push / pull as usual
-docker tag alpine:3.23 registry.example.com/library/alpine:3.23
-docker push registry.example.com/library/alpine:3.23
+docker tag alpine:3.24 registry.example.com/library/alpine:3.24
+docker push registry.example.com/library/alpine:3.24
 ```
 
 Open the same public URL in a browser for the UI and sign in as `admin`. UI session cookies use a random hash key (re-login after container recreate is expected unless you add a persistent `sessionKeysFile`).
@@ -817,7 +817,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 
 ## Garage
 
-Digest-pinned upstream [Garage](https://garagehq.deuxfleurs.fr/) v2.3.0 ([quick start](https://garagehq.deuxfleurs.fr/documentation/quick-start/)): lightweight S3-compatible object store (MinIO alternative). Single-node auto layout via `--single-node --default-bucket`. Runs as UID `1000` with a read-only rootfs. Init chowns volumes.
+Digest-pinned upstream [Garage](https://garagehq.deuxfleurs.fr/) v2.4.1 ([quick start](https://garagehq.deuxfleurs.fr/documentation/quick-start/)): lightweight S3-compatible object store (MinIO alternative). Single-node auto layout via `--single-node --default-bucket`. Runs as UID `1000` with a read-only rootfs. Init chowns volumes.
 
 ### First deploy
 

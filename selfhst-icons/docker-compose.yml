@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   selfhst-icons:
-    image: ghcr.io/selfhst/icons:4.0.3@sha256:d4fa8d64d7f16e6740bf70b731bf90208a6e5e71c28115f287c60df44fe892fa
+    image: ghcr.io/selfhst/icons:4.0.3@sha256:f04523334dc29b0018a7a726f770c6a0ea9192262f1703304b6d5200a0736048
     restart: unless-stopped
     user: "65534:65534"
     environment:

@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   valkey:
-    image: valkey/valkey:9.1-alpine@sha256:a0dbf4c1d5708782907c10e2c72deff317518518b5288a58416981d9db95d30b
+    image: valkey/valkey:9.2-alpine@sha256:cdcb7b1c7b6f1c9cb9442c71ac6275e78184657448407b2c1fdde7ee8024f4fb
     restart: unless-stopped
     command: valkey-server --requirepass "${SERVICE_PASSWORD_ONEUPTIMEVALKEY:?}" --save "" --appendonly no
     environment:
@@ -36,7 +36,7 @@ services:
     logging: *default-logging
 
   clickhouse:
-    image: clickhouse/clickhouse-server:26.7@sha256:c1b7782ed3375560d70e571f3c2e87081246ae5aefb19886126001ec93660804
+    image: clickhouse/clickhouse-server:26.7@sha256:035d95aad5e466af8e436e7ed15551fd613fb00e84f891a09cf5dbf330f820a1
     restart: unless-stopped
     environment:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
@@ -65,7 +65,7 @@ services:
     logging: *default-logging
 
   postgres:
-    image: postgres:15-bookworm@sha256:5d1d70e254e3c5d7d76847a9deebb18478cd518df37abf6b278d4bdb1fe5d96c
+    image: postgres:15-bookworm@sha256:539ceaaae49b3a7c8a04467cf00cc6788d8e3f1675df41860d86eebc4c40524f
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
@@ -97,7 +97,7 @@ services:
     logging: *default-logging
 
   app:
-    image: oneuptime/app:release@sha256:b6145bace5a9ce9831a8a29b3cbfe1d295a37984c4a1ce6384c6c3fde484082f
+    image: oneuptime/app:release@sha256:ec788e5e838f730eef6d760433d402da1d7b2536312a111542b5e81cb13369ea
     restart: unless-stopped
     depends_on:
       postgres:
@@ -184,7 +184,7 @@ services:
     logging: *default-logging
 
   probe-1:
-    image: oneuptime/probe:release@sha256:6b1b8f593dabe7be199298a55bcb77d82f9ea1c185cf480c6f12342ff54ffc58
+    image: oneuptime/probe:release@sha256:91dac418f5ba91cbc94d4662de97f1bdc86086e02fcd1b36bf25904d4022a770
     restart: unless-stopped
     depends_on:
       app:
@@ -225,7 +225,7 @@ services:
     logging: *default-logging
 
   ingress:
-    image: oneuptime/nginx:release@sha256:468ac372d2f1e12f972a20130fda7d3523eb7f301a14a0305536bb1e34ca22cd
+    image: oneuptime/nginx:release@sha256:633757b3b8c5446befe903a630d3be550f999f0c6b74786db93d001a50480e5e
     restart: unless-stopped
     depends_on:
       app:
