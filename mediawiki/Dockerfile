@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
+# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 
 ARG MEDIAWIKI_IMAGE=mediawiki:1.46@sha256:bb44e464548a42f75c9c401f341a3486871a46292dbcc6666d6ac0230291e11c
 ARG MEDIAWIKI_UID=10001

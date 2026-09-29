@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
+# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 
 ARG BUGPIN_IMAGE=registry.arantic.cloud/bugpin/bugpin:latest@sha256:c067f08f469a3068f0465194d091f91a9a0d5af15f3c0939a83c28470ec79a7e
 
