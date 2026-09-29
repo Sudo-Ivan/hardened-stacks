@@ -173,7 +173,7 @@ services:
       start_period: 120s
 
   mariadb:
-    image: mariadb:11.4@sha256:a794d9eb009e20de605858a11f32f63b4075cbd197c650436f0e3b457e4caed7
+    image: mariadb:11.4@sha256:70cc072b29b4a89ae07abb2d4da2c64678a7f2dfe092751bb51c87d67dc1338b
     restart: unless-stopped
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-flarum}

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
 
-ARG FORGEJO_IMAGE=codeberg.org/forgejo/forgejo:16-rootless@sha256:214f4ae63ee78be1e445e58573c88dc7215e72091210852e0df94eaac1a25685
+ARG FORGEJO_IMAGE=codeberg.org/forgejo/forgejo:16-rootless@sha256:5effb7305584aca479b29fde6f9631a6dbe86ae798ae02eeea33a3666f0c0bf8
 
 FROM ${FORGEJO_IMAGE}
 

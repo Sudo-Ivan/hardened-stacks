@@ -6,21 +6,21 @@
 # Admin UI is server-rendered Go templates (no Node build).
 ARG RAVENGUARD_REF=1c2ddb11391fac8f09048ddef8a4fcfe386179b8
 
-FROM alpine:3.22 AS src
+FROM alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS src
 ARG RAVENGUARD_REF
 RUN apk add --no-cache git ca-certificates \
  && git clone https://github.com/Quad4-Software/ravenguard.git /src \
  && cd /src \
  && git checkout "${RAVENGUARD_REF}"
 
-FROM golang:1.27.0-bookworm AS build
+FROM golang:1.27.1-bookworm@sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195 AS build
 WORKDIR /src
 COPY --from=src /src/go.mod /src/go.sum ./
 RUN go mod download
 COPY --from=src /src/ ./
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/ravenguard ./cmd/ravenguard
 
-FROM alpine:3.22
+FROM alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
 RUN apk add --no-cache ca-certificates tini su-exec \
  && adduser -D -u 65532 -H nonroot \
  && mkdir -p /config /blocklists /data/admin /data/proxy /tmp \

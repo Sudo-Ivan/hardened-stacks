@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
     restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
@@ -40,7 +40,7 @@ services:
     logging: *default-logging
 
   zitadel:
-    image: ghcr.io/zitadel/zitadel:v4.17.3@sha256:2ec2a42551862ca59dc752c321c7041358dea8b33b63ea5e021ec499ad5e2d9f
+    image: ghcr.io/zitadel/zitadel:v4.19.2@sha256:956a298405189a8f6cd4ec92e8828b1bd10caa7da8b139c39d251d7053e33784
     restart: unless-stopped
     depends_on:
       postgres:
