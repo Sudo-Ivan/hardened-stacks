@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
-ARG BUGPIN_IMAGE=registry.arantic.cloud/bugpin/bugpin:latest@sha256:c067f08f469a3068f0465194d091f91a9a0d5af15f3c0939a83c28470ec79a7e
+ARG BUGPIN_IMAGE=registry.arantic.cloud/bugpin/bugpin:latest@sha256:317c79d9154f3ecc7e9714a1edfbd4510737a4dffd20c3b64b67b99046539c96
 
 FROM ${BUGPIN_IMAGE}
 

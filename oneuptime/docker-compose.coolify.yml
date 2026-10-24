@@ -36,7 +36,7 @@ services:
     logging: *default-logging
 
   clickhouse:
-    image: clickhouse/clickhouse-server:26.7@sha256:035d95aad5e466af8e436e7ed15551fd613fb00e84f891a09cf5dbf330f820a1
+    image: clickhouse/clickhouse-server:26.7@sha256:7ba435e7364cd3733537acd3bdf78c24c751d88c46fda08345f74728dc697eed
     restart: unless-stopped
     environment:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
@@ -65,7 +65,7 @@ services:
     logging: *default-logging
 
   postgres:
-    image: postgres:15-bookworm@sha256:539ceaaae49b3a7c8a04467cf00cc6788d8e3f1675df41860d86eebc4c40524f
+    image: postgres:15-bookworm@sha256:22c6356b2897cb0b4be6ad550b44ff97a0f29df7dbe327c01bc3c84bd457694d
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
@@ -97,7 +97,7 @@ services:
     logging: *default-logging
 
   app:
-    image: oneuptime/app:release@sha256:ec788e5e838f730eef6d760433d402da1d7b2536312a111542b5e81cb13369ea
+    image: oneuptime/app:release@sha256:f2f6267163de42930b2901c6116ba111abef90f1d83b9a508b215ebc2b84e261
     restart: unless-stopped
     depends_on:
       postgres:
@@ -184,7 +184,7 @@ services:
     logging: *default-logging
 
   probe-1:
-    image: oneuptime/probe:release@sha256:91dac418f5ba91cbc94d4662de97f1bdc86086e02fcd1b36bf25904d4022a770
+    image: oneuptime/probe:release@sha256:ac7cd2b25506e808b7ebca7fa50e6bc8d433677cfa7625d42e7b3df2c2fae427
     restart: unless-stopped
     depends_on:
       app:
@@ -225,7 +225,7 @@ services:
     logging: *default-logging
 
   ingress:
-    image: oneuptime/nginx:release@sha256:633757b3b8c5446befe903a630d3be550f999f0c6b74786db93d001a50480e5e
+    image: oneuptime/nginx:release@sha256:5d29ec7c1d760c014eccf830dd4aa126bf44cd3e7cc62a4e1987a6872f25b4e9
     restart: unless-stopped
     depends_on:
       app:

@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:16-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67
+    image: postgres:16-bookworm@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0
     restart: unless-stopped
     environment:
       - POSTGRES_USER=signoz
@@ -40,7 +40,7 @@ services:
     logging: *default-logging
 
   clickhouse-keeper:
-    image: clickhouse/clickhouse-keeper:25.12.5@sha256:525b8b0f93ccb371131c46f22a066ea43d33d74aba314203e8044609945d8524
+    image: clickhouse/clickhouse-keeper:25.12.11@sha256:a33a660d6a354cfc09eff0936ff123970e03b916723e3ea05dadd174c2d5ca04
     restart: unless-stopped
     entrypoint: ["/usr/bin/clickhouse-keeper", "--config-file=/etc/clickhouse-keeper/keeper.yaml"]
     volumes:
@@ -63,7 +63,7 @@ services:
     logging: *default-logging
 
   clickhouse-init:
-    image: clickhouse/clickhouse-server:25.12.5@sha256:cacf32d6884291dc2ff5e0156a97f46fc53ff7c929a7906d114e268a929dfd3a
+    image: clickhouse/clickhouse-server:25.12.11@sha256:8a790dd3468db22b1d4e7b18a176f378ff5ff6053b9c48dd4ea1fa71a24c5ba6
     restart: on-failure
     entrypoint: ["/bin/bash", "-c"]
     command:
@@ -89,7 +89,7 @@ services:
     logging: *default-logging
 
   clickhouse:
-    image: clickhouse/clickhouse-server:25.12.5@sha256:cacf32d6884291dc2ff5e0156a97f46fc53ff7c929a7906d114e268a929dfd3a
+    image: clickhouse/clickhouse-server:25.12.11@sha256:8a790dd3468db22b1d4e7b18a176f378ff5ff6053b9c48dd4ea1fa71a24c5ba6
     restart: unless-stopped
     depends_on:
       clickhouse-keeper:
@@ -131,7 +131,7 @@ services:
     logging: *default-logging
 
   migrator:
-    image: signoz/signoz-otel-collector:v0.144.12@sha256:deb566a7a3c0ba544ee58ccc92ee1f0e6da827bc40383e52f3c824705e100a3d
+    image: signoz/signoz-otel-collector:v0.144.14@sha256:b08671f56f3164c7781a740cc2af12c0739435faf49cd2ddc8a50d7238b81170
     restart: on-failure
     depends_on:
       clickhouse:
@@ -158,7 +158,7 @@ services:
     logging: *default-logging
 
   signoz:
-    image: signoz/signoz:v0.143.0@sha256:7da6b9c07db100cfcf7949966211b16543e3d6828df31f0f7a24110d734a811c
+    image: signoz/signoz:v0.146.0@sha256:cd3ca6950df3b3681b4629c1b2cea4d3bcd5fece57445a3ec2a1a20466ab14ca
     restart: unless-stopped
     depends_on:
       postgres:
@@ -195,7 +195,7 @@ services:
     logging: *default-logging
 
   otel-collector:
-    image: signoz/signoz-otel-collector:v0.144.12@sha256:deb566a7a3c0ba544ee58ccc92ee1f0e6da827bc40383e52f3c824705e100a3d
+    image: signoz/signoz-otel-collector:v0.144.14@sha256:b08671f56f3164c7781a740cc2af12c0739435faf49cd2ddc8a50d7238b81170
     restart: unless-stopped
     depends_on:
       clickhouse:

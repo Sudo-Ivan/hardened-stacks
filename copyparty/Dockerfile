@@ -1,8 +1,8 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
-ARG ALPINE_IMAGE=alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
-ARG COPYPARTY_COMMIT=5ccc999f3975830c3bb308ecb1781ddf84b88db4
-ARG COPYPARTY_VERSION=v1.20.24
+ARG ALPINE_IMAGE=alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+ARG COPYPARTY_COMMIT=7ccebb69487ba76232f96f5591cbd614eef765d2
+ARG COPYPARTY_VERSION=v1.20.26
 
 FROM ${ALPINE_IMAGE} AS builder
 
@@ -27,7 +27,7 @@ RUN git init . \
     && git fetch --depth 1 origin "${COPYPARTY_COMMIT}" \
     && git checkout FETCH_HEAD
 
-ARG COPYPARTY_RELEASE_VERSION=1.20.24
+ARG COPYPARTY_RELEASE_VERSION=1.20.26
 
 RUN curl -fsSL "https://github.com/9001/copyparty/releases/download/v${COPYPARTY_RELEASE_VERSION}/copyparty-${COPYPARTY_RELEASE_VERSION}.tar.gz" \
       -o /tmp/copyparty-release.tar.gz \

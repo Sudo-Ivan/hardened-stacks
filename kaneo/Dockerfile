@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
-ARG KANEO_IMAGE=ghcr.io/usekaneo/kaneo:latest@sha256:af576bdb2a6dffaa33f67d715f2d83b30afbb052b44cf4b036e76bed9857319a
+ARG KANEO_IMAGE=ghcr.io/usekaneo/kaneo:latest@sha256:3df62194406061d9a162409b4c08d8af5225e423ce813d509694cea616ac9d23
 
 FROM ${KANEO_IMAGE}
 

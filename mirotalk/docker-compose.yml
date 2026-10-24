@@ -39,7 +39,7 @@ services:
     logging: *default-logging
 
   mirotalk:
-    image: docker.io/mirotalk/p2p:latest@sha256:eb1260fb4214817553e2026506f8929fc666395787608d0ac96943d296e6fa85
+    image: docker.io/mirotalk/p2p:latest@sha256:7895b34b4dd4c4bec859a3061c31c0a58b9cd14aa63bba7b810d5e0992d401c0
     restart: unless-stopped
     user: "1000:1000"
     depends_on:

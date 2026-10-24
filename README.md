@@ -857,7 +857,7 @@ docker compose exec garage /garage -c /etc/garage.toml status
 
 ## Pingvin Share X
 
-Digest-pinned [Pingvin Share X](https://github.com/smp46/pingvin-share-x) v1.22.3 (maintained fork of archived Pingvin Share): WeTransfer-style share links with expiry, passwords, and reverse shares. Docs: [installation](https://smp46.github.io/pingvin-share-x/setup/installation/). Image starts as root to create `PUID`/`PGID` 1000 then drops. No `cap_drop`/`read_only` (entrypoint needs them). `no-new-privileges` stays on.
+Digest-pinned [Pingvin Share X](https://github.com/smp46/pingvin-share-x) v1.22.4 (maintained fork of archived Pingvin Share): WeTransfer-style share links with expiry, passwords, and reverse shares. Docs: [installation](https://smp46.github.io/pingvin-share-x/setup/installation/). Image starts as root to create `PUID`/`PGID` 1000 then drops. No `cap_drop`/`read_only` (entrypoint needs them). `no-new-privileges` stays on.
 
 ### First deploy
 

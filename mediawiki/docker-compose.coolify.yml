@@ -45,7 +45,7 @@ services:
       start_period: 180s
 
   mariadb:
-    image: mariadb:11.4@sha256:70cc072b29b4a89ae07abb2d4da2c64678a7f2dfe092751bb51c87d67dc1338b
+    image: mariadb:11.4@sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873
     restart: unless-stopped
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-mediawiki}

@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
-ARG BUGSINK_IMAGE=bugsink/bugsink:2@sha256:c5e3657451f4ba1ddb145a5118a4347314206cc5ba98f40e5f268c6c0975963e
+ARG BUGSINK_IMAGE=bugsink/bugsink:2@sha256:a013fe0da745b753d65f9816020d36f91620e6d1c62ac22d82463b3a6ec2d71e
 
 FROM ${BUGSINK_IMAGE}
 
